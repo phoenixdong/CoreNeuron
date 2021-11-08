@@ -18,7 +18,7 @@
 #include "coreneuron/coreneuron.hpp"
 #include "coreneuron/utils/nrnoc_aux.hpp"
 
-#define precision 15
+#define precision 18
 namespace coreneuron {
 static std::map<Point_process*, int> pnt2index;  // for deciding if NetCon is to be printed
 static int pntindex;                             // running count of printed point processes.

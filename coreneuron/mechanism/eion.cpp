@@ -286,9 +286,10 @@ void nrn_cur_ion(NrnThread* nt, Memb_list* ml, int type) {
     ppd = ml->pdata;
     _PRAGMA_FOR_CUR_ACC_LOOP_
     for (int _iml = 0; _iml < _cntml_actual; ++_iml) {
+        // printf("_iml: %d iontype: %d (iontype & 0100) : %d\n",_iml, iontype, iontype & 0100);
         dcurdv = 0.;
         cur = 0.;
-        if (iontype & 0100) {
+        if (iontype & 0100 || type == 25) {
             erev = nrn_nernst(conci, conco, charge, celsius);
         }
     };
@@ -314,10 +315,12 @@ void nrn_init_ion(NrnThread* nt, Memb_list* ml, int type) {
     ppd = ml->pdata;
     _PRAGMA_FOR_INIT_ACC_LOOP_
     for (int _iml = 0; _iml < _cntml_actual; ++_iml) {
+        // printf("_iml: %d iontype: %d (iontype & 04) : %d\n",_iml, iontype, iontype & 04);
         if (iontype & 04) {
             conci = conci0;
             conco = conco0;
         }
+        // printf("_iml: %d iontype: %d (iontype & 040) : %d\n",_iml, iontype, iontype & 040);
         if (iontype & 040) {
             erev = nrn_nernst(conci, conco, charge, celsius);
         }
