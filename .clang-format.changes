@@ -1,2 +1,3 @@
-SortIncludes: false
 IndentCaseLabels: true
+SortIncludes: false
+StatementMacros: [nrn_acc_pragma, nrn_omp_pragma]

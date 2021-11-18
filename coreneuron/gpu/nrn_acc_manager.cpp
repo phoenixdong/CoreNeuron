@@ -27,6 +27,9 @@
 #ifdef _OPENACC
 #include <openacc.h>
 #endif
+#ifdef CORENRN_PREFER_OPENMP_OFFLOAD
+#include <omp.h>
+#endif
 
 #ifdef CRAYPAT
 #include <pat_api.h>
@@ -1343,6 +1346,9 @@ void init_gpu() {
 
     int device_num = local_rank % num_devices_per_node;
     acc_set_device_num(device_num, device_type);
+#ifdef CORENRN_PREFER_OPENMP_OFFLOAD
+    omp_set_default_device(device_num);
+#endif
 
     if (nrnmpi_myid == 0) {
         std::cout << " Info : " << num_devices_per_node << " GPUs shared by " << local_size
