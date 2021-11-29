@@ -15,30 +15,10 @@
 #include "coreneuron/network/tnode.hpp"
 #include "coreneuron/utils/lpt.hpp"
 #include "coreneuron/utils/memory.h"
+#include "coreneuron/utils/offload.hpp"
 #include "coreneuron/apps/corenrn_parameters.hpp"
 
 #include "coreneuron/permute/node_permute.h"  // for print_quality
-
-#ifdef _OPENACC
-#include <openacc.h>
-
-#define nrn_pragma_stringify(x) #x
-// For now we do not support OpenMP offload without OpenACC, that will come soon
-#ifdef CORENRN_PREFER_OPENMP_OFFLOAD
-#define nrn_pragma_omp(x) _Pragma(nrn_pragma_stringify(omp x))
-#define nrn_pragma_acc(x)
-#else
-#define nrn_pragma_acc(x) _Pragma(nrn_pragma_stringify(acc x))
-#define nrn_pragma_omp(x)
-#endif
-#else
-// No OpenACC -> no GPU offload, for now.
-#ifdef CORENRN_PREFER_OPENMP_OFFLOAD
-#error "Pure OpenMP offload not supported yet"
-#endif
-#define nrn_pragma_acc(x)
-#define nrn_pragma_omp(x)
-#endif
 
 namespace coreneuron {
 int interleave_permute_type;
