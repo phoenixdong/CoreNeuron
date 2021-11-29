@@ -1,3 +1,3 @@
 IndentCaseLabels: true
 SortIncludes: false
-StatementMacros: [nrn_acc_pragma, nrn_omp_pragma]
+StatementMacros: [nrn_pragma_acc, nrn_pragma_omp]

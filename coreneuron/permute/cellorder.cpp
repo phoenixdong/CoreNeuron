@@ -25,19 +25,19 @@
 #define nrn_pragma_stringify(x) #x
 // For now we do not support OpenMP offload without OpenACC, that will come soon
 #ifdef CORENRN_PREFER_OPENMP_OFFLOAD
-#define nrn_omp_pragma(x) _Pragma(nrn_pragma_stringify(omp x))
-#define nrn_acc_pragma(x)
+#define nrn_pragma_omp(x) _Pragma(nrn_pragma_stringify(omp x))
+#define nrn_pragma_acc(x)
 #else
-#define nrn_acc_pragma(x) _Pragma(nrn_pragma_stringify(acc x))
-#define nrn_omp_pragma(x)
+#define nrn_pragma_acc(x) _Pragma(nrn_pragma_stringify(acc x))
+#define nrn_pragma_omp(x)
 #endif
 #else
 // No OpenACC -> no GPU offload, for now.
 #ifdef CORENRN_PREFER_OPENMP_OFFLOAD
 #error "Pure OpenMP offload not supported yet"
 #endif
-#define nrn_acc_pragma(x)
-#define nrn_omp_pragma(x)
+#define nrn_pragma_acc(x)
+#define nrn_pragma_omp(x)
 #endif
 
 namespace coreneuron {
@@ -506,7 +506,7 @@ static void triang_interleaved2(NrnThread* nt, int icore, int ncycle, int* strid
     bool has_subtrees_to_compute = true;
 
     // clang-format off
-    nrn_acc_pragma(loop seq)
+    nrn_pragma_acc(loop seq)
     for (; has_subtrees_to_compute; ) {  // ncycle loop
 #if !defined(_OPENACC)
         // serial test, gpu does this in parallel
@@ -517,11 +517,11 @@ static void triang_interleaved2(NrnThread* nt, int icore, int ncycle, int* strid
                 // what is the index
                 int ip = GPU_PARENT(i);
                 double p = GPU_A(i) / GPU_D(i);
-                nrn_acc_pragma(atomic update)
-                nrn_omp_pragma(atomic update)
+                nrn_pragma_acc(atomic update)
+                nrn_pragma_omp(atomic update)
                 GPU_D(ip) -= p * GPU_B(i);
-                nrn_acc_pragma(atomic update)
-                nrn_omp_pragma(atomic update)
+                nrn_pragma_acc(atomic update)
+                nrn_pragma_omp(atomic update)
                 GPU_RHS(ip) -= p * GPU_RHS(i);
             }
 #if !defined(_OPENACC)
@@ -554,7 +554,7 @@ static void bksub_interleaved2(NrnThread* nt,
 #if !defined(_OPENACC)
     for (int i = root; i < lastroot; i += 1) {
 #else
-    nrn_acc_pragma(loop seq)
+    nrn_pragma_acc(loop seq)
     for (int i = root; i < lastroot; i += warpsize) {
 #endif
         GPU_RHS(i) /= GPU_D(i);  // the root
@@ -615,14 +615,14 @@ void solve_interleaved2(int ith) {
 #if defined(_OPENACC) && !defined(CORENRN_PREFER_OPENMP_OFFLOAD)
         int nstride = stridedispl[nwarp];
 #endif
-        nrn_acc_pragma(parallel loop gang vector vector_length(
+        nrn_pragma_acc(parallel loop gang vector vector_length(
             warpsize) present(nt [0:1],
                               strides [0:nstride],
                               ncycles [0:nwarp],
                               stridedispl [0:nwarp + 1],
                               rootbegin [0:nwarp + 1],
                               nodebegin [0:nwarp + 1]) if (nt->compute_gpu) async(nt->stream_id))
-        nrn_omp_pragma(target teams distribute parallel for simd depend(inout: nt) if(nt->compute_gpu))
+        nrn_pragma_omp(target teams distribute parallel for simd depend(inout: nt) if(nt->compute_gpu))
         for (int icore = 0; icore < ncore; ++icore) {
             int iwarp = icore / warpsize;     // figure out the >> value
             int ic = icore & (warpsize - 1);  // figure out the & mask
@@ -641,7 +641,7 @@ void solve_interleaved2(int ith) {
             }  // serial test mode
 #endif
         }
-        nrn_acc_pragma(wait(nt->stream_id))
+        nrn_pragma_acc(wait(nt->stream_id))
 #ifdef _OPENACC
     }
 #endif
@@ -676,19 +676,19 @@ void solve_interleaved1(int ith) {
     // OL211123: can we preserve the error checking behaviour of OpenACC's
     // present clause with OpenMP? It is a bug if these data are not present,
     // so diagnostics are helpful...
-    nrn_acc_pragma(parallel loop present(nt [0:1],
+    nrn_pragma_acc(parallel loop present(nt [0:1],
                                          stride [0:nstride],
                                          firstnode [0:ncell],
                                          lastnode [0:ncell],
                                          cellsize [0:ncell]) if (nt->compute_gpu)
                        async(nt->stream_id))
-    nrn_omp_pragma(target teams distribute parallel for simd depend(inout: nt) if(nt->compute_gpu))
+    nrn_pragma_omp(target teams distribute parallel for simd depend(inout: nt) if(nt->compute_gpu))
     for (int icell = 0; icell < ncell; ++icell) {
         int icellsize = cellsize[icell];
         triang_interleaved(nt, icell, icellsize, nstride, stride, lastnode);
         bksub_interleaved(nt, icell, icellsize, nstride, stride, firstnode);
     }
-    nrn_acc_pragma(wait(nt->stream_id))
+    nrn_pragma_acc(wait(nt->stream_id))
 }
 
 void solve_interleaved(int ith) {
