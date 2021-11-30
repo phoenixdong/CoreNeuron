@@ -6,6 +6,7 @@
 # =============================================================================
 */
 #pragma once
+
 #ifdef _OPENACC
 #include <openacc.h>
 
@@ -19,10 +20,8 @@
 #define nrn_pragma_omp(x)
 #endif
 #else
-// No OpenACC -> no GPU offload, for now.
-#ifdef CORENRN_PREFER_OPENMP_OFFLOAD
-#error "Pure OpenMP offload not supported yet"
-#endif
+// Some pure C++ files are compiled with -mp but not -mp=gpu, take this branch
+// for those files too.
 #define nrn_pragma_acc(x)
 #define nrn_pragma_omp(x)
 #endif

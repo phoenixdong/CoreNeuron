@@ -897,10 +897,8 @@ void update_weights_from_gpu(NrnThread* threads, int nthreads) {
         size_t n_weight = nt->n_weight;
         if (nt->compute_gpu && n_weight > 0) {
             double* weights = nt->weights;
-            // clang-format off
-
-            #pragma acc update host(weights [0:n_weight])
-            // clang-format on
+            nrn_pragma_acc(update host(weights[0:n_weight]))
+            nrn_pragma_omp(target update from(weights[0:n_weight]))
         }
     }
 }
