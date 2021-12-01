@@ -105,7 +105,7 @@ option(CORENRN_ENABLE_LEGACY_UNITS "Enable legacy FARADAY, R, etc" OFF)
 option(CORENRN_ENABLE_PRCELLSTATE "Enable NRN_PRCELLSTATE debug feature" OFF)
 
 set(CORENRN_EXTERNAL_BENCHMARK_DATA
-    "/gpfs/bbp.cscs.ch/project/proj16/olupton/nersc-gpu-hackathon-dec-2021"
+    "/gpfs/bbp.cscs.ch/project/proj12/nersc-gpu-hackathon-dec-2021"
     CACHE PATH "Path to input data files and mechanisms for benchmarks")
 set(CORENRN_NMODL_DIR
     ""
