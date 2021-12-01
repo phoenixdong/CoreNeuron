@@ -6,22 +6,14 @@
 # =============================================================================
 */
 #pragma once
-
-#ifdef _OPENACC
-#include <openacc.h>
-
 #define nrn_pragma_stringify(x) #x
-// For now we do not support OpenMP offload without OpenACC, that will come soon
-#ifdef CORENRN_PREFER_OPENMP_OFFLOAD
-#define nrn_pragma_omp(x) _Pragma(nrn_pragma_stringify(omp x))
+#if defined(CORENEURON_ENABLE_GPU) && defined(CORENRN_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
 #define nrn_pragma_acc(x)
-#else
+#define nrn_pragma_omp(x) _Pragma(nrn_pragma_stringify(omp x))
+#elif defined(CORENEURON_ENABLE_GPU) && !defined(CORENRN_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
 #define nrn_pragma_acc(x) _Pragma(nrn_pragma_stringify(acc x))
 #define nrn_pragma_omp(x)
-#endif
 #else
-// Some pure C++ files are compiled with -mp but not -mp=gpu, take this branch
-// for those files too.
 #define nrn_pragma_acc(x)
 #define nrn_pragma_omp(x)
 #endif

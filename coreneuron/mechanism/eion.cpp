@@ -19,26 +19,6 @@
 
 #define _STRIDE _cntml_padded + _iml
 
-// clang-format off
-
-#if defined(_OPENACC)
-#define _PRAGMA_FOR_INIT_ACC_LOOP_  \
-    _Pragma(                        \
-        "acc parallel loop present(pd[0:_cntml_padded*5], ppd[0:1], nrn_ion_global_map[0:nrn_ion_global_map_size][0:ion_global_map_member_size]) if(nt->compute_gpu)")
-#define _PRAGMA_FOR_CUR_ACC_LOOP_   \
-    _Pragma(                        \
-        "acc parallel loop present(pd[0:_cntml_padded*5], nrn_ion_global_map[0:nrn_ion_global_map_size][0:ion_global_map_member_size]) if(nt->compute_gpu) async(stream_id)")
-#define _PRAGMA_FOR_SEC_ORDER_CUR_ACC_LOOP_     \
-    _Pragma(                                    \
-        "acc parallel loop present(pd[0:_cntml_padded*5], ni[0:_cntml_actual], _vec_rhs[0:_nt->end]) if(_nt->compute_gpu) async(stream_id)")
-#else
-#define _PRAGMA_FOR_INIT_ACC_LOOP_          _Pragma("")
-#define _PRAGMA_FOR_CUR_ACC_LOOP_           _Pragma("")
-#define _PRAGMA_FOR_SEC_ORDER_CUR_ACC_LOOP_ _Pragma("")
-#endif
-
-// clang-format on
-
 namespace coreneuron {
 
 // for each ion it refers to internal concentration, external concentration, and charge,
@@ -277,14 +257,16 @@ void nrn_cur_ion(NrnThread* nt, Memb_list* ml, int type) {
     double* pd;
     Datum* ppd;
     (void) nt; /* unused */
-#if defined(_OPENACC)
-    int stream_id = nt->stream_id;
-#endif
     /*printf("ion_cur %s\n", memb_func[type].sym->name);*/
     int _cntml_padded = ml->_nodecount_padded;
     pd = ml->data;
     ppd = ml->pdata;
-    _PRAGMA_FOR_CUR_ACC_LOOP_
+    nrn_pragma_acc(parallel loop present(
+        pd [0:_cntml_padded * 5],
+        nrn_ion_global_map
+        [0:nrn_ion_global_map_size] [0:ion_global_map_member_size]) if (nt->compute_gpu)
+                       async(nt->stream_id))
+    nrn_pragma_omp(target teams distribute parallel for simd depend(inout: nt) nowait if(nt->compute_gpu))
     for (int _iml = 0; _iml < _cntml_actual; ++_iml) {
         dcurdv = 0.;
         cur = 0.;
@@ -312,7 +294,13 @@ void nrn_init_ion(NrnThread* nt, Memb_list* ml, int type) {
     int _cntml_padded = ml->_nodecount_padded;
     pd = ml->data;
     ppd = ml->pdata;
-    _PRAGMA_FOR_INIT_ACC_LOOP_
+    // No async(...) / nowait / depend clauses.
+    nrn_pragma_acc(parallel loop present(
+        pd [0:_cntml_padded * 5],
+        ppd [0:1],
+        nrn_ion_global_map
+        [0:nrn_ion_global_map_size] [0:ion_global_map_member_size]) if (nt->compute_gpu))
+    nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
     for (int _iml = 0; _iml < _cntml_actual; ++_iml) {
         if (iontype & 04) {
             conci = conci0;
@@ -332,9 +320,6 @@ void second_order_cur(NrnThread* _nt, int secondorder) {
     int _cntml_padded;
     double* pd;
     (void) _nt; /* unused */
-#if defined(_OPENACC)
-    int stream_id = _nt->stream_id;
-#endif
     double* _vec_rhs = _nt->_actual_rhs;
 
     if (secondorder == 2) {
@@ -345,7 +330,11 @@ void second_order_cur(NrnThread* _nt, int secondorder) {
                 int* ni = ml->nodeindices;
                 _cntml_padded = ml->_nodecount_padded;
                 pd = ml->data;
-                _PRAGMA_FOR_SEC_ORDER_CUR_ACC_LOOP_
+                nrn_pragma_acc(parallel loop present(pd [0:_cntml_padded * 5],
+                                                     ni [0:_cntml_actual],
+                                                     _vec_rhs [0:_nt->end]) if (_nt->compute_gpu)
+                                   async(_nt->stream_id))
+                nrn_pragma_omp(target teams distribute parallel for simd depend(inout: _nt) nowait if(_nt->compute_gpu))
                 for (int _iml = 0; _iml < _cntml_actual; ++_iml) {
                     cur += dcurdv * (_vec_rhs[ni[_iml]]);
                 }

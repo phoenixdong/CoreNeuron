@@ -6,8 +6,6 @@
 # =============================================================================
 */
 
-#include <set>
-
 #include "coreneuron/nrnconf.h"
 #include "coreneuron/sim/multicore.hpp"
 #include "coreneuron/utils/nrn_assert.h"
@@ -19,6 +17,12 @@
 #include "coreneuron/apps/corenrn_parameters.hpp"
 
 #include "coreneuron/permute/node_permute.h"  // for print_quality
+
+#ifdef _OPENACC
+#include <openacc.h>
+#endif
+
+#include <set>
 
 namespace coreneuron {
 int interleave_permute_type;
