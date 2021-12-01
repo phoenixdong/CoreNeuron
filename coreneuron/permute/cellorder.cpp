@@ -651,12 +651,6 @@ void solve_interleaved1(int ith) {
     int* lastnode = ii.lastnode;
     int* cellsize = ii.cellsize;
 
-#ifdef CORENRN_PREFER_OPENMP_OFFLOAD
-    // Make sure OpenACC work is done before we start OpenMP work
-    if (nt->compute_gpu) {
-        _Pragma("acc wait(nt->stream_id)")
-    }
-#endif
     // OL211123: can we preserve the error checking behaviour of OpenACC's
     // present clause with OpenMP? It is a bug if these data are not present,
     // so diagnostics are helpful...
