@@ -43,6 +43,34 @@ void nrn_ion_global_map_delete_from_device();
 void nrn_VecPlay_copyto_device(NrnThread* nt, void** d_vecplay);
 void nrn_VecPlay_delete_from_device(NrnThread* nt);
 
+void* cnrn_gpu_copyin(void* h_ptr, std::size_t len) {
+#if defined(CORENEURON_ENABLE_GPU) && !defined(CORENRN_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
+    return acc_copyin(p, len);
+#elif defined(CORENRN_ENABLE_GPU) && defined(CORENRN_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
+    auto host_id = omp_get_initial_device();
+    auto device_id = omp_get_default_device();
+    auto* d_ptr = omp_target_alloc(len, device_id);
+    omp_target_memcpy(d_ptr, h_ptr, len, 0, 0, device_id, host_id);
+    omp_target_associate_ptr(h_ptr, d_ptr, len, 0, device_id);
+    return d_p;
+#else
+    return nullptr;
+#endif
+}
+
+void* cnrn_memcpy_to_device(void* h_ptr, void* d_ptr, size_t len) {
+#if defined(CORENEURON_ENABLE_GPU) && !defined(CORENRN_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
+    return acc_memcpy_to_device(h_ptr, d_ptr, len);
+#elif defined(CORENRN_ENABLE_GPU) && defined(CORENRN_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
+    auto host_id = omp_get_initial_device();
+    auto device_id = omp_get_default_device();
+    omp_target_memcpy(d_ptr, h_ptr, len, 0, 0, device_id, host_id);
+    return d_p;
+#else
+    return nullptr;
+#endif
+}
+
 /* note: threads here are corresponding to global nrn_threads array */
 void setup_nrnthreads_on_device(NrnThread* threads, int nthreads) {
 #ifdef _OPENACC
@@ -61,13 +89,13 @@ void setup_nrnthreads_on_device(NrnThread* threads, int nthreads) {
         NrnThread* nt = threads + i;  // NrnThread on host
 
         if (nt->n_presyn) {
-            PreSyn* d_presyns = (PreSyn*) acc_copyin(nt->presyns, sizeof(PreSyn) * nt->n_presyn);
+            PreSyn* d_presyns = (PreSyn*) cnrn_gpu_copyin(nt->presyns, sizeof(PreSyn) * nt->n_presyn);
         }
 
         if (nt->n_vecplay) {
             /* copy VecPlayContinuous instances */
             /** just empty containers */
-            void** d_vecplay = (void**) acc_copyin(nt->_vecplay, sizeof(void*) * nt->n_vecplay);
+            void** d_vecplay = (void**) cnrn_gpu_copyin(nt->_vecplay, sizeof(void*) * nt->n_vecplay);
             // note: we are using unified memory for NrnThread. Once VecPlay is copied to gpu,
             // we dont want to update nt->vecplay because it will also set gpu pointer of vecplay
             // inside nt on cpu (due to unified memory).
