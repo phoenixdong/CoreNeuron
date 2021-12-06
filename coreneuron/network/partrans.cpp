@@ -132,6 +132,8 @@ void nrnthread_v_transfer(NrnThread* _nt) {
     }
 }
 
+/// TODO: Corresponding exit data cluase for OpenACC/OpenMP is missing and hence
+///       GPU buffers are not freed.
 void nrn_partrans::gap_update_indices() {
     // Ensure index vectors, src_gather, and insrc_buf_ are on the gpu.
     if (insrcdspl_) {

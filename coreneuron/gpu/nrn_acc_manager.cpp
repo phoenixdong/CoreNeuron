@@ -612,24 +612,29 @@ void update_net_receive_buffer(NrnThread* nt) {
                 Instrumentor::phase p_net_receive_buffer_order("net-receive-buf-cpu2gpu");
                 // note that dont update nrb otherwise we lose pointers
 
+                // clang-format off
+
                 /* update scalar elements */
                 nrn_pragma_acc(update device(nrb->_cnt,
                                              nrb->_displ_cnt,
-                                             nrb->_pnt_index[:nrb->_cnt], nrb->_weight_index
-                                             [:nrb->_cnt], nrb->_nrb_t
-                                             [:nrb->_cnt], nrb->_nrb_flag
-                                             [:nrb->_cnt], nrb->_displ
-                                             [:nrb->_displ_cnt + 1], nrb->_nrb_index
-                                             [:nrb->_cnt]) async(nt->stream_id))
+                                             nrb->_pnt_index[:nrb->_cnt],
+                                             nrb->_weight_index[:nrb->_cnt],
+                                             nrb->_nrb_t[:nrb->_cnt],
+                                             nrb->_nrb_flag[:nrb->_cnt],
+                                             nrb->_displ[:nrb->_displ_cnt + 1],
+                                             nrb->_nrb_index[:nrb->_cnt])
+                                             async(nt->stream_id))
                 nrn_pragma_omp(target update to(nrb->_cnt,
                                                 nrb->_displ_cnt,
-                                                nrb->_pnt_index[:nrb->_cnt], nrb->_weight_index
-                                                [:nrb->_cnt], nrb->_nrb_t
-                                                [:nrb->_cnt], nrb->_nrb_flag
-                                                [:nrb->_cnt], nrb->_displ
-                                                [:nrb->_displ_cnt + 1], nrb->_nrb_index
-                                                [:nrb->_cnt]) depend(in
-                                                                     : nt) nowait)
+                                                nrb->_pnt_index[:nrb->_cnt],
+                                                nrb->_weight_index[:nrb->_cnt],
+                                                nrb->_nrb_t[:nrb->_cnt],
+                                                nrb->_nrb_flag[:nrb->_cnt],
+                                                nrb->_displ[:nrb->_displ_cnt + 1],
+                                                nrb->_nrb_index[:nrb->_cnt])
+                                                depend(in: nt)
+                                                nowait)
+                // clang-format on
             }
         }
     }
