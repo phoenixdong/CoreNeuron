@@ -1303,7 +1303,7 @@ void init_gpu() {
     omp_set_default_device(device_num);
 #endif
 
-    if (nrnmpi_myid == 0) {
+    if (nrnmpi_myid == 0 && !corenrn_param.is_quiet()) {
         std::cout << " Info : " << num_devices_per_node << " GPUs shared by " << local_size
                   << " ranks per node\n";
     }
