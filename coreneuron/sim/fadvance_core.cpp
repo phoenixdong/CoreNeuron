@@ -80,9 +80,11 @@ void dt2thread(double adt) { /* copied from nrnoc/fadvance.c */
             }
             nrn_pragma_acc(update device(nt->_t, nt->_dt, nt->cj)
                                async(nt->stream_id) if (nt->compute_gpu))
-            nrn_pragma_omp(target update to(nt->_t, nt->_dt, nt->cj) depend(inout
-                                                                            : nt)
-                               nowait if (nt->compute_gpu))
+            // clang-format off
+            nrn_pragma_omp(target update to(nt->_t, nt->_dt, nt->cj)
+                                         depend(inout: nt) nowait
+                                         if(nt->compute_gpu))
+            // clang-format on
         }
     }
 }

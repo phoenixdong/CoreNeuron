@@ -294,7 +294,10 @@ void nrn_init_ion(NrnThread* nt, Memb_list* ml, int type) {
     int _cntml_padded = ml->_nodecount_padded;
     pd = ml->data;
     ppd = ml->pdata;
-    // No async(...) / nowait / depend clauses.
+    // There was no async(...) clause in the initial OpenACC implementation, so
+    // no `nowait` clause has been added to the OpenMP implementation. TODO:
+    // verify if this can be made asynchronous or if there is a strong reason it
+    // needs to be like this.
     nrn_pragma_acc(parallel loop present(
         pd [0:_cntml_padded * 5],
         ppd [0:1],
