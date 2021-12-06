@@ -55,7 +55,7 @@ void nrn_finitialize(int setv, double v) {
             double* vec_v = &(VEC_V(0));
             nrn_pragma_acc(
                 parallel loop present(_nt [0:1], vec_v [0:_nt->end]) if (_nt->compute_gpu))
-            nrn_pragma_omp(target teams distribute parallel for simd depend(inout: _nt) if(_nt->compute_gpu))
+            nrn_pragma_omp(target teams distribute parallel for simd if(_nt->compute_gpu))
             for (int i = 0; i < _nt->end; ++i) {
                 vec_v[i] = v;
             }

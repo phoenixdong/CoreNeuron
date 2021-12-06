@@ -631,9 +631,7 @@ void update_net_receive_buffer(NrnThread* nt) {
                                                 nrb->_nrb_t[:nrb->_cnt],
                                                 nrb->_nrb_flag[:nrb->_cnt],
                                                 nrb->_displ[:nrb->_displ_cnt + 1],
-                                                nrb->_nrb_index[:nrb->_cnt])
-                                                depend(in: nt)
-                                                nowait)
+                                                nrb->_nrb_index[:nrb->_cnt]))
                 // clang-format on
             }
         }

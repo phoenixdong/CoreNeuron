@@ -57,16 +57,13 @@ void nrnmpi_v_transfer() {
                                              src_data [0:nt->_ndata],
                                              src_gather [0:n_src_gather]) if (nt->compute_gpu)
                            async(nt->stream_id))
-        nrn_pragma_omp(target teams distribute parallel for simd depend(inout: nt) nowait if(nt->compute_gpu))
+        nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
         for (int i = 0; i < n_src_gather; ++i) {
             src_gather[i] = src_data[src_indices[i]];
         }
         nrn_pragma_acc(update host(src_gather [0:n_src_gather]) if (nt->compute_gpu)
                            async(nt->stream_id))
-        // clang-format off
-        nrn_pragma_omp(target update from(src_gather[0:n_src_gather]) if(nt->compute_gpu)
-                                     nowait depend(inout: nt))
-        // clang-format on
+        nrn_pragma_omp(target update from(src_gather [0:n_src_gather]) if (nt->compute_gpu))
     }
 
     // copy gathered source values to outsrc_buf_
@@ -126,7 +123,7 @@ void nrnthread_v_transfer(NrnThread* _nt) {
                                          tar_data [0:ndata],
                                          insrc_buf_ [0:n_insrc_buf]) if (_nt->compute_gpu)
                        async(_nt->stream_id))
-    nrn_pragma_omp(target teams distribute parallel for simd map(to: tar_indices[0:ntar]) depend(inout: _nt) nowait if(_nt->compute_gpu))
+    nrn_pragma_omp(target teams distribute parallel for simd map(to: tar_indices[0:ntar]) if(_nt->compute_gpu))
     for (size_t i = 0; i < ntar; ++i) {
         tar_data[tar_indices[i]] = insrc_buf_[insrc_indices[i]];
     }

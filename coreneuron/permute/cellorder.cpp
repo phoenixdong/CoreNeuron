@@ -606,7 +606,7 @@ void solve_interleaved2(int ith) {
                               stridedispl [0:nwarp + 1],
                               rootbegin [0:nwarp + 1],
                               nodebegin [0:nwarp + 1]) if (nt->compute_gpu) async(nt->stream_id))
-        nrn_pragma_omp(target teams distribute parallel for simd depend(inout: nt) if(nt->compute_gpu))
+        nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
         for (int icore = 0; icore < ncore; ++icore) {
             int iwarp = icore / warpsize;     // figure out the >> value
             int ic = icore & (warpsize - 1);  // figure out the & mask
@@ -660,7 +660,7 @@ void solve_interleaved1(int ith) {
                                          lastnode [0:ncell],
                                          cellsize [0:ncell]) if (nt->compute_gpu)
                        async(nt->stream_id))
-    nrn_pragma_omp(target teams distribute parallel for simd depend(inout: nt) if(nt->compute_gpu))
+    nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
     for (int icell = 0; icell < ncell; ++icell) {
         int icellsize = cellsize[icell];
         triang_interleaved(nt, icell, icellsize, nstride, stride, lastnode);
