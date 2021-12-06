@@ -126,7 +126,7 @@ void nrnthread_v_transfer(NrnThread* _nt) {
                                          tar_data [0:ndata],
                                          insrc_buf_ [0:n_insrc_buf]) if (_nt->compute_gpu)
                        async(_nt->stream_id))
-    nrn_pragma_omp(target teams distribute parallel for simd depend(inout: _nt) nowait if(_nt->compute_gpu))
+    nrn_pragma_omp(target teams distribute parallel for simd map(to: tar_indices[0:ntar]) depend(inout: _nt) nowait if(_nt->compute_gpu))
     for (size_t i = 0; i < ntar; ++i) {
         tar_data[tar_indices[i]] = insrc_buf_[insrc_indices[i]];
     }
