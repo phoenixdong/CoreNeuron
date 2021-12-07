@@ -73,7 +73,7 @@ if(CORENRN_ENABLE_GPU)
   else()
     message(FATAL_ERROR "${CORENRN_ACCELERATOR_OFFLOAD} not supported with NVHPC compilers")
   endif()
-  set(NVHPC_ACC_COMP_FLAGS)
+  set(NVHPC_ACC_COMP_FLAGS "-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda -Wno-unknown-cuda-version -I${CUDAToolkit_INCLUDE_DIRS}")
   set(NVHPC_ACC_LINK_FLAGS)
   # avoid PGI adding standard compliant "-A" flags
   # set(CMAKE_CXX14_STANDARD_COMPILE_OPTION --c++14)
