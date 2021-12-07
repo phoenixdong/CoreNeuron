@@ -490,6 +490,7 @@ static void triang_interleaved2(NrnThread* nt, int icore, int ncycle, int* strid
     bool has_subtrees_to_compute = true;
 
     // clang-format off
+    // OL211207: check if we need an OpenMP directive here.
     nrn_pragma_acc(loop seq)
     for (; has_subtrees_to_compute; ) {  // ncycle loop
 #if !defined(_OPENACC)
@@ -538,6 +539,7 @@ static void bksub_interleaved2(NrnThread* nt,
 #if !defined(_OPENACC)
     for (int i = root; i < lastroot; i += 1) {
 #else
+    // OL211207: check if we need an OpenMP directive here.
     nrn_pragma_acc(loop seq)
     for (int i = root; i < lastroot; i += warpsize) {
 #endif
@@ -660,7 +662,7 @@ void solve_interleaved1(int ith) {
                                          lastnode [0:ncell],
                                          cellsize [0:ncell]) if (nt->compute_gpu)
                        async(nt->stream_id))
-    nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
+    // nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
     for (int icell = 0; icell < ncell; ++icell) {
         int icellsize = cellsize[icell];
         triang_interleaved(nt, icell, icellsize, nstride, stride, lastnode);
