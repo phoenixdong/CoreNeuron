@@ -325,7 +325,7 @@ if(NOT ${CORENRN_EXTERNAL_BENCHMARK_DATA} STREQUAL "")
       benchmark_command
       "'${CMAKE_BINARY_DIR}/benchmark/${CMAKE_SYSTEM_PROCESSOR}/special-core'"
       " --datpath '${CORENRN_EXTERNAL_BENCHMARK_DATA}/channel-benchmark-all-440-cells-2-ranks'"
-      " --tstop 1 &&"
+      " --tstop 1 --gpu &&"
       "diff out.dat '${CORENRN_EXTERNAL_BENCHMARK_DATA}/channel-benchmark-all-440-cells-2-ranks.gpu.spikes'"
   )
   add_test(NAME benchmark COMMAND sh -c "${benchmark_command}")

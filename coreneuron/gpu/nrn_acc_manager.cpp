@@ -27,6 +27,9 @@
 #ifdef _OPENACC
 #include <openacc.h>
 #endif
+#ifdef CORENEURON_PREFER_OPENMP_OFFLOAD
+#include <omp.h>
+#endif
 
 #ifdef CRAYPAT
 #include <pat_api.h>
@@ -605,25 +608,36 @@ void update_net_receive_buffer(NrnThread* nt) {
             // instance order to avoid race. setup _displ and _nrb_index
             net_receive_buffer_order(nrb);
 
-#ifdef _OPENACC
             if (nt->compute_gpu) {
                 Instrumentor::phase p_net_receive_buffer_order("net-receive-buf-cpu2gpu");
                 // note that dont update nrb otherwise we lose pointers
 
-                /* update scalar elements */
-                acc_update_device(&nrb->_cnt, sizeof(int));
-                acc_update_device(&nrb->_displ_cnt, sizeof(int));
+                // clang-format off
 
-                acc_update_device(nrb->_pnt_index, sizeof(int) * nrb->_cnt);
-                acc_update_device(nrb->_weight_index, sizeof(int) * nrb->_cnt);
-                acc_update_device(nrb->_nrb_t, sizeof(double) * nrb->_cnt);
-                acc_update_device(nrb->_nrb_flag, sizeof(double) * nrb->_cnt);
-                acc_update_device(nrb->_displ, sizeof(int) * (nrb->_displ_cnt + 1));
-                acc_update_device(nrb->_nrb_index, sizeof(int) * nrb->_cnt);
+                /* update scalar elements */
+                nrn_pragma_acc(update device(nrb->_cnt,
+                                             nrb->_displ_cnt,
+                                             nrb->_pnt_index[:nrb->_cnt],
+                                             nrb->_weight_index[:nrb->_cnt],
+                                             nrb->_nrb_t[:nrb->_cnt],
+                                             nrb->_nrb_flag[:nrb->_cnt],
+                                             nrb->_displ[:nrb->_displ_cnt + 1],
+                                             nrb->_nrb_index[:nrb->_cnt])
+                                             async(nt->stream_id))
+                nrn_pragma_omp(target update to(nrb->_cnt,
+                                                nrb->_displ_cnt,
+                                                nrb->_pnt_index[:nrb->_cnt],
+                                                nrb->_weight_index[:nrb->_cnt],
+                                                nrb->_nrb_t[:nrb->_cnt],
+                                                nrb->_nrb_flag[:nrb->_cnt],
+                                                nrb->_displ[:nrb->_displ_cnt + 1],
+                                                nrb->_nrb_index[:nrb->_cnt]))
+                // clang-format on
             }
-#endif
         }
     }
+    nrn_pragma_acc(wait(nt->stream_id))
+    nrn_pragma_omp(taskwait)
 }
 
 void update_net_send_buffer_on_host(NrnThread* nt, NetSendBuffer_t* nsb) {
@@ -894,65 +908,10 @@ void update_weights_from_gpu(NrnThread* threads, int nthreads) {
         size_t n_weight = nt->n_weight;
         if (nt->compute_gpu && n_weight > 0) {
             double* weights = nt->weights;
-            // clang-format off
-
-            #pragma acc update host(weights [0:n_weight])
-            // clang-format on
+            nrn_pragma_acc(update host(weights [0:n_weight]))
+            nrn_pragma_omp(target update from(weights [0:n_weight]))
         }
     }
-}
-
-void update_matrix_from_gpu(NrnThread* _nt) {
-#ifdef _OPENACC
-    if (_nt->compute_gpu && (_nt->end > 0)) {
-        /* before copying, make sure all computations in the stream are completed */
-
-        // clang-format off
-
-        #pragma acc wait(_nt->stream_id)
-
-        /* openacc routine doesn't allow asyn, use pragma */
-        // acc_update_self(_nt->_actual_rhs, 2*_nt->end*sizeof(double));
-
-        /* RHS and D are contigious, copy them in one go!
-         * NOTE: in pragma you have to give actual pointer like below and not nt->rhs...
-         */
-        double* rhs = _nt->_actual_rhs;
-        int ne = nrn_soa_padded_size(_nt->end, 0);
-
-        #pragma acc update host(rhs[0 : 2 * ne]) async(_nt->stream_id)
-        #pragma acc wait(_nt->stream_id)
-        // clang-format on
-    }
-#else
-    (void) _nt;
-#endif
-}
-
-void update_matrix_to_gpu(NrnThread* _nt) {
-#ifdef _OPENACC
-    if (_nt->compute_gpu && (_nt->end > 0)) {
-        /* before copying, make sure all computations in the stream are completed */
-
-        // clang-format off
-
-        #pragma acc wait(_nt->stream_id)
-
-        /* while discussion with Michael we found that RHS is also needed on
-         * gpu because nrn_cap_jacob uses rhs which is being updated on GPU
-         */
-        double* v = _nt->_actual_v;
-        double* rhs = _nt->_actual_rhs;
-        int ne = nrn_soa_padded_size(_nt->end, 0);
-
-        #pragma acc update device(v[0 : ne]) async(_nt->stream_id)
-        #pragma acc update device(rhs[0 : ne]) async(_nt->stream_id)
-        #pragma acc wait(_nt->stream_id)
-        // clang-format on
-    }
-#else
-    (void) _nt;
-#endif
 }
 
 /** Cleanup device memory that is being tracked by the OpenACC runtime.
@@ -1343,8 +1302,11 @@ void init_gpu() {
 
     int device_num = local_rank % num_devices_per_node;
     acc_set_device_num(device_num, device_type);
+#ifdef CORENEURON_PREFER_OPENMP_OFFLOAD
+    omp_set_default_device(device_num);
+#endif
 
-    if (nrnmpi_myid == 0) {
+    if (nrnmpi_myid == 0 && !corenrn_param.is_quiet()) {
         std::cout << " Info : " << num_devices_per_node << " GPUs shared by " << local_size
                   << " ranks per node\n";
     }

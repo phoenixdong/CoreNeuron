@@ -85,6 +85,7 @@ add_subdirectory(${CORENEURON_PROJECT_SOURCE_DIR}/external/CLI11)
 # Build options
 # =============================================================================
 option(CORENRN_ENABLE_OPENMP "Build the CORE NEURON with OpenMP implementation" ON)
+option(CORENRN_ENABLE_OPENMP_OFFLOAD "Prefer OpenMP target offload to OpenACC" ON)
 option(CORENRN_ENABLE_TIMEOUT "Enable nrn_timeout implementation" ON)
 option(CORENRN_ENABLE_REPORTING "Enable use of ReportingLib for soma reports" OFF)
 option(CORENRN_ENABLE_MPI "Enable MPI-based execution" ON)
@@ -104,7 +105,7 @@ option(CORENRN_ENABLE_LEGACY_UNITS "Enable legacy FARADAY, R, etc" OFF)
 option(CORENRN_ENABLE_PRCELLSTATE "Enable NRN_PRCELLSTATE debug feature" OFF)
 
 set(CORENRN_EXTERNAL_BENCHMARK_DATA
-    ""
+    "/gpfs/bbp.cscs.ch/project/proj12/nersc-gpu-hackathon-dec-2021"
     CACHE PATH "Path to input data files and mechanisms for benchmarks")
 set(CORENRN_NMODL_DIR
     ""
@@ -138,7 +139,7 @@ if(CORENRN_ENABLE_GPU)
 
   # Set some sensible default CUDA architectures.
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES 60 70 80)
+    set(CMAKE_CUDA_ARCHITECTURES 70 80)
     message(STATUS "Setting default CUDA architectures to ${CMAKE_CUDA_ARCHITECTURES}")
   endif()
 
