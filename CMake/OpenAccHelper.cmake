@@ -70,7 +70,7 @@ if(CORENRN_ENABLE_GPU)
     string(APPEND NVHPC_ACC_COMP_FLAGS " -mp=gpu -Minfo=mp")
     string(APPEND NVHPC_ACC_LINK_FLAGS " -mp=gpu")
   endif()
-  set(NVHPC_ACC_COMP_FLAGS)
+  set(NVHPC_ACC_COMP_FLAGS "-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda -Wno-unknown-cuda-version -I${CUDAToolkit_INCLUDE_DIRS}")
   set(NVHPC_ACC_LINK_FLAGS)
   # avoid PGI adding standard compliant "-A" flags
   # set(CMAKE_CXX14_STANDARD_COMPILE_OPTION --c++14)
