@@ -121,18 +121,28 @@ void setup_nrnthreads_on_device(NrnThread* threads, int nthreads) {
 
         dptr = d__data + 0 * ne;
         acc_memcpy_to_device(&(d_nt->_actual_rhs), &(dptr), sizeof(double*));
+        auto* d_actual_rhs_sp = (float*) acc_malloc(ne * sizeof(float));
+        acc_memcpy_to_device(&(d_nt->_actual_rhs_sp), &(d_actual_rhs_sp), sizeof(float*));
 
         dptr = d__data + 1 * ne;
         acc_memcpy_to_device(&(d_nt->_actual_d), &(dptr), sizeof(double*));
+        auto* d_actual_d_sp = (float*) acc_malloc(ne * sizeof(float));
+        acc_memcpy_to_device(&(d_nt->_actual_d_sp), &(d_actual_d_sp), sizeof(float*));
 
         dptr = d__data + 2 * ne;
         acc_memcpy_to_device(&(d_nt->_actual_a), &(dptr), sizeof(double*));
+        auto* _actual_a_sp = (float*) acc_malloc(ne * sizeof(float));
+        acc_memcpy_to_device(&(d_nt->_actual_a_sp), &(_actual_a_sp), sizeof(float*));
 
         dptr = d__data + 3 * ne;
         acc_memcpy_to_device(&(d_nt->_actual_b), &(dptr), sizeof(double*));
+        auto* d_actual_b_sp = (float*) acc_malloc(ne * sizeof(float));
+        acc_memcpy_to_device(&(d_nt->_actual_b_sp), &(d_actual_b_sp), sizeof(float*));
 
         dptr = d__data + 4 * ne;
         acc_memcpy_to_device(&(d_nt->_actual_v), &(dptr), sizeof(double*));
+        auto* d_actual_v_sp = (float*) acc_malloc(ne * sizeof(float));
+        acc_memcpy_to_device(&(d_nt->_actual_v_sp), &(d_actual_v_sp), sizeof(float*));
 
         dptr = d__data + 5 * ne;
         acc_memcpy_to_device(&(d_nt->_actual_area), &(dptr), sizeof(double*));

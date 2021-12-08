@@ -118,6 +118,12 @@ struct NrnThread: public MemoryManaged {
     double* _shadow_d = nullptr; /* Not pointer into _data. Avoid race for multiple POINT_PROCESS in
                           same compartment */
 
+    float* _actual_rhs_sp = nullptr;
+    float* _actual_d_sp = nullptr;
+    float* _actual_a_sp = nullptr;
+    float* _actual_b_sp = nullptr;
+    float* _actual_v_sp = nullptr;
+
     /* Fast membrane current calculation struct */
     NrnFastImem* nrn_fast_imem = nullptr;
 

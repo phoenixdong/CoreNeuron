@@ -422,11 +422,11 @@ void mk_cell_indices() {
 }
 #endif  // INTERLEAVE_DEBUG
 
-#define GPU_V(i)      nt->_actual_v[i]
-#define GPU_A(i)      nt->_actual_a[i]
-#define GPU_B(i)      nt->_actual_b[i]
-#define GPU_D(i)      nt->_actual_d[i]
-#define GPU_RHS(i)    nt->_actual_rhs[i]
+#define GPU_V(i)      nt->_actual_v_sp[i]
+#define GPU_A(i)      nt->_actual_a_sp[i]
+#define GPU_B(i)      nt->_actual_b_sp[i]
+#define GPU_D(i)      nt->_actual_d_sp[i]
+#define GPU_RHS(i)    nt->_actual_rhs_sp[i]
 #define GPU_PARENT(i) nt->_v_parent_index[i]
 
 // How does the interleaved permutation with stride get used in
@@ -447,7 +447,7 @@ static void triang_interleaved(NrnThread* nt,
 #ifndef _OPENACC
             nrn_assert(ip >= 0);  // if (ip < 0) return;
 #endif
-            double p = GPU_A(i) / GPU_D(i);
+            float p = GPU_A(i) / GPU_D(i);
             GPU_D(ip) -= p * GPU_B(i);
             GPU_RHS(ip) -= p * GPU_RHS(i);
             i -= stride[istride];
@@ -499,7 +499,7 @@ static void triang_interleaved2(NrnThread* nt, int icore, int ncycle, int* strid
             if (icore < istride) {  // most efficient if istride equal  warpsize
                 // what is the index
                 int ip = GPU_PARENT(i);
-                double p = GPU_A(i) / GPU_D(i);
+                float p = GPU_A(i) / GPU_D(i);
                 #pragma acc atomic update
                 GPU_D(ip) -= p * GPU_B(i);
                 #pragma acc atomic update
@@ -604,6 +604,19 @@ void solve_interleaved2(int ith) {
 #ifdef _OPENACC
         // clang-format off
         
+        int ne = nrn_soa_padded_size(nt->end, 0);
+
+        #pragma acc parallel loop gang vector \
+        present(nt[0:1]) \
+        if (nt->compute_gpu) async(stream_id)
+        for (int i = 0; i < ne; ++i) {
+            nt->_actual_v_sp[i]   = (float)nt->_actual_v[i];
+            nt->_actual_a_sp[i]   = (float)nt->_actual_a[i];
+            nt->_actual_b_sp[i]   = (float)nt->_actual_b[i];
+            nt->_actual_d_sp[i]   = (float)nt->_actual_d[i];
+            nt->_actual_rhs_sp[i] = (float)nt->_actual_rhs[i];
+        }
+
         #pragma acc parallel loop gang vector vector_length(warpsize) \
             present(nt[0:1], strides[0:nstride],                      \
             ncycles[0:nwarp], stridedispl[0:nwarp+1],                 \
@@ -630,6 +643,18 @@ void solve_interleaved2(int ith) {
 #endif
         }
 #ifdef _OPENACC
+
+        #pragma acc parallel loop gang vector \
+        present(nt[0:1]) \
+        if (nt->compute_gpu) async(stream_id)
+        for (int i = 0; i < ne; ++i) {
+            nt->_actual_v[i]   = (double)nt->_actual_v_sp[i];
+            nt->_actual_a[i]   = (double)nt->_actual_a_sp[i];
+            nt->_actual_b[i]   = (double)nt->_actual_b_sp[i];
+            nt->_actual_d[i]   = (double)nt->_actual_d_sp[i];
+            nt->_actual_rhs[i] = (double)nt->_actual_rhs_sp[i];
+        }
+
 #pragma acc wait(nt->stream_id)
 #endif
 #ifdef _OPENACC
