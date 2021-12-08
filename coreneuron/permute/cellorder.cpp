@@ -569,42 +569,50 @@ static void bksub_interleaved2(NrnThread* nt,
 }
 
 void dp_to_sp(int ith) {
-#ifdef _OPENACC
     NrnThread* nt = nrn_threads + ith;
 
     int ne = nrn_soa_padded_size(nt->end, 0);
 
+#ifdef _OPENACC
+// clang-format off
     #pragma acc parallel loop gang vector \
     present(nt[0:1]) \
     if (nt->compute_gpu) async(nt->stream_id)
-    for (int i = 0; i < ne; ++i) {
-        nt->_actual_v_sp[i]   = (float)nt->_actual_v[i];
-        nt->_actual_a_sp[i]   = (float)nt->_actual_a[i];
-        nt->_actual_b_sp[i]   = (float)nt->_actual_b[i];
-        nt->_actual_d_sp[i]   = (float)nt->_actual_d[i];
-        nt->_actual_rhs_sp[i] = (float)nt->_actual_rhs[i];
-    }
+// clang-format on
 #endif
+    for (int i = 0; i < ne; ++i) {
+        nt->_actual_v_sp[i] = (float) nt->_actual_v[i];
+        nt->_actual_a_sp[i] = (float) nt->_actual_a[i];
+        nt->_actual_b_sp[i] = (float) nt->_actual_b[i];
+        nt->_actual_d_sp[i] = (float) nt->_actual_d[i];
+        nt->_actual_rhs_sp[i] = (float) nt->_actual_rhs[i];
+    }
 }
 
 void sp_to_dp(int ith) {
-#ifdef _OPENACC
     NrnThread* nt = nrn_threads + ith;
 
     int ne = nrn_soa_padded_size(nt->end, 0);
 
+#ifdef _OPENACC
+// clang-format off
     #pragma acc parallel loop gang vector \
     present(nt[0:1]) \
     if (nt->compute_gpu) async(nt->stream_id)
+// clang-format on
+#endif
     for (int i = 0; i < ne; ++i) {
-        nt->_actual_v[i]   = (double)nt->_actual_v_sp[i];
-        nt->_actual_a[i]   = (double)nt->_actual_a_sp[i];
-        nt->_actual_b[i]   = (double)nt->_actual_b_sp[i];
-        nt->_actual_d[i]   = (double)nt->_actual_d_sp[i];
-        nt->_actual_rhs[i] = (double)nt->_actual_rhs_sp[i];
+        nt->_actual_v[i] = (double) nt->_actual_v_sp[i];
+        nt->_actual_a[i] = (double) nt->_actual_a_sp[i];
+        nt->_actual_b[i] = (double) nt->_actual_b_sp[i];
+        nt->_actual_d[i] = (double) nt->_actual_d_sp[i];
+        nt->_actual_rhs[i] = (double) nt->_actual_rhs_sp[i];
     }
 
+#ifdef _OPENACC
+// clang-format off
     #pragma acc wait(nt->stream_id)
+// clang-format on
 #endif
 }
 
