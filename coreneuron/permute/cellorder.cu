@@ -92,9 +92,12 @@ void solve_interleaved2_launcher(NrnThread* nt, InterleaveInfo* info, int ncore,
     // TODO: Should blocksPerGrid be a fixed number and have a while block inside the kernel?
     int blocksPerGrid = (ncore + threadsPerBlock - 1) / threadsPerBlock;
 
-    solve_interleaved2_kernel<<<blocksPerGrid, threadsPerBlock, 0, cuda_stream>>>(nt, info, ncore);
-
-    cudaStreamSynchronize(cuda_stream);
+    if (cuda_stream) {
+        solve_interleaved2_kernel<<<blocksPerGrid, threadsPerBlock, 0, cuda_stream>>>(nt, info, ncore);
+        cudaStreamSynchronize(cuda_stream);
+    } else {
+        solve_interleaved2_kernel<<<blocksPerGrid, threadsPerBlock, 0>>>(nt, info, ncore);
+    }
 
     CHECKLAST("solve_interleaved2_launcher");
 }

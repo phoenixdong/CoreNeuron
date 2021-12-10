@@ -193,16 +193,16 @@ void nrn_init_and_load_data(int argc,
     // precedence is: set by user, globals.dat, 34.0
     celsius = corenrn_param.celsius;
 
-#if _OPENACC
+#if CORENEURON_ENABLE_GPU
     if (!corenrn_param.gpu && corenrn_param.cell_interleave_permute == 2) {
         fprintf(stderr,
-                "compiled with _OPENACC does not allow the combination of --cell-permute=2 and "
+                "compiled with GPU support does not allow the combination of --cell-permute=2 and "
                 "missing --gpu\n");
         exit(1);
     }
     if (!corenrn_param.gpu && corenrn_param.cuda_interface) {
         fprintf(stderr,
-                "compiled with OpenACC/CUDA does not allow the combination of --cuda-interface and "
+                "compiled with GPU support does not allow the combination of --cuda-interface and "
                 "missing --gpu\n");
         exit(1);
     }
@@ -497,7 +497,7 @@ extern "C" void mk_mech_init(int argc, char** argv) {
     }
 #endif
 
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     if (corenrn_param.gpu) {
         init_gpu();
     }
@@ -621,7 +621,8 @@ extern "C" int run_solve_core(int argc, char** argv) {
         Instrumentor::stop_profile();
 
         // update cpu copy of NrnThread from GPU
-        update_nrnthreads_on_host(nrn_threads, nrn_nthread);
+        // TODO: check segfault here
+        // update_nrnthreads_on_host(nrn_threads, nrn_nthread);
 
         // direct mode and full trajectory gathering on CoreNEURON, send back.
         if (corenrn_embedded) {

@@ -28,6 +28,7 @@ void realloc_net_receive_buffer(NrnThread* nt, Memb_list* ml);
 void update_net_send_buffer_on_host(NrnThread* nt, NetSendBuffer_t* nsb);
 void update_weights_from_gpu(NrnThread* threads, int nthreads);
 void init_gpu();
+void* cnrn_get_device_stream(int stream_id);
 
 }  // namespace coreneuron
 #endif  // _nrn_device_manager_

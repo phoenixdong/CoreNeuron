@@ -106,9 +106,46 @@ void* cnrn_target_deviceptr(void* h_ptr) {
 #endif
 }
 
+int cnrn_num_devices() {
+#if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
+    // choose nvidia GPU by default
+    acc_device_t device_type = acc_device_nvidia;
+    // check how many gpu devices available per node
+    return acc_get_num_devices(device_type);
+#elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
+    return omp_get_num_devices();
+#else
+    throw std::runtime_error("cnrn_num_devices() not implemented without OpenACC/OpenMP and gpu build");
+#endif
+}
+
+int cnrn_set_device(int device_num) {
+#if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
+    acc_device_t device_type = acc_device_nvidia;
+    acc_set_device_num(device_num, device_type);
+#elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
+    omp_set_default_device(device_num);
+#else
+    throw std::runtime_error("cnrn_set_device() not implemented without OpenACC/OpenMP and gpu build");
+#endif
+}
+
+void* cnrn_get_device_stream(int stream_id) {
+#if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
+    return acc_get_cuda_stream(stream_id);
+#elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
+    // check what is the stream in the context of OpenMP
+    return nullptr;
+#else
+    throw std::runtime_error("cnrn_get_device_stream() not implemented without OpenACC/OpenMP and gpu build");
+#endif
+}
+
+
+
 /* note: threads here are corresponding to global nrn_threads array */
 void setup_nrnthreads_on_device(NrnThread* threads, int nthreads) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     // initialize NrnThreads for gpu execution
     // empty thread or only artificial cells should be on cpu
     for (int i = 0; i < nthreads; i++) {
@@ -525,7 +562,7 @@ void setup_nrnthreads_on_device(NrnThread* threads, int nthreads) {
 }
 
 void copy_ivoc_vect_to_device(const IvocVect& from, IvocVect& to, bool vector_copy_needed) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     /// by default `to` is desitionation pointer on a device
     IvocVect* d_iv = &to;
 
@@ -547,7 +584,7 @@ void copy_ivoc_vect_to_device(const IvocVect& from, IvocVect& to, bool vector_co
 }
 
 void delete_ivoc_vect_from_device(IvocVect& vec) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     auto const n = vec.size();
     if (n) {
         cnrn_target_delete(vec.data(), sizeof(double) * n);
@@ -564,7 +601,7 @@ void realloc_net_receive_buffer(NrnThread* nt, Memb_list* ml) {
         return;
     }
 
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     if (nt->compute_gpu) {
         // free existing vectors in buffers on gpu
         cnrn_target_delete(nrb->_pnt_index, nrb->_size * sizeof(int));
@@ -585,7 +622,7 @@ void realloc_net_receive_buffer(NrnThread* nt, Memb_list* ml) {
     nrb->_displ = (int*) erealloc(nrb->_displ, (nrb->_size + 1) * sizeof(int));
     nrb->_nrb_index = (int*) erealloc(nrb->_nrb_index, nrb->_size * sizeof(int));
 
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     if (nt->compute_gpu) {
         int *d_weight_index, *d_pnt_index, *d_displ, *d_nrb_index;
         double *d_nrb_t, *d_nrb_flag;
@@ -713,7 +750,7 @@ void update_net_receive_buffer(NrnThread* nt) {
 }
 
 void update_net_send_buffer_on_host(NrnThread* nt, NetSendBuffer_t* nsb) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     if (!nt->compute_gpu)
         return;
 
@@ -751,7 +788,7 @@ void update_net_send_buffer_on_host(NrnThread* nt, NetSendBuffer_t* nsb) {
 }
 
 void update_nrnthreads_on_host(NrnThread* threads, int nthreads) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
 
     for (int i = 0; i < nthreads; i++) {
         NrnThread* nt = threads + i;
@@ -899,7 +936,7 @@ void update_nrnthreads_on_host(NrnThread* threads, int nthreads) {
 }
 
 void update_nrnthreads_on_device(NrnThread* threads, int nthreads) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
 
     for (int i = 0; i < nthreads; i++) {
         NrnThread* nt = threads + i;
@@ -1073,7 +1110,7 @@ void update_weights_from_gpu(NrnThread* threads, int nthreads) {
  *  the same process.
  */
 void delete_nrnthreads_on_device(NrnThread* threads, int nthreads) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     for (int i = 0; i < nthreads; i++) {
         NrnThread* nt = threads + i;
         {
@@ -1206,7 +1243,7 @@ void delete_nrnthreads_on_device(NrnThread* threads, int nthreads) {
 
 
 void nrn_newtonspace_copyto_device(NewtonSpace* ns) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     // FIXME this check needs to be tweaked if we ever want to run with a mix
     //       of CPU and GPU threads.
     if (nrn_threads[0].compute_gpu == 0) {
@@ -1248,7 +1285,7 @@ void nrn_newtonspace_copyto_device(NewtonSpace* ns) {
 }
 
 void nrn_newtonspace_delete_from_device(NewtonSpace* ns) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     // FIXME this check needs to be tweaked if we ever want to run with a mix
     //       of CPU and GPU threads.
     if (nrn_threads[0].compute_gpu == 0) {
@@ -1267,7 +1304,7 @@ void nrn_newtonspace_delete_from_device(NewtonSpace* ns) {
 }
 
 void nrn_sparseobj_copyto_device(SparseObj* so) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     // FIXME this check needs to be tweaked if we ever want to run with a mix
     //       of CPU and GPU threads.
     if (nrn_threads[0].compute_gpu == 0) {
@@ -1350,7 +1387,7 @@ void nrn_sparseobj_copyto_device(SparseObj* so) {
 }
 
 void nrn_sparseobj_delete_from_device(SparseObj* so) {
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
     // FIXME this check needs to be tweaked if we ever want to run with a mix
     //       of CPU and GPU threads.
     if (nrn_threads[0].compute_gpu == 0) {
@@ -1372,7 +1409,7 @@ void nrn_sparseobj_delete_from_device(SparseObj* so) {
 #endif
 }
 
-#ifdef _OPENACC
+#ifdef CORENEURON_ENABLE_GPU
 
 void nrn_ion_global_map_copyto_device() {
     if (nrn_ion_global_map_size) {
@@ -1401,11 +1438,8 @@ void nrn_ion_global_map_delete_from_device() {
 }
 
 void init_gpu() {
-    // choose nvidia GPU by default
-    acc_device_t device_type = acc_device_nvidia;
-
     // check how many gpu devices available per node
-    int num_devices_per_node = acc_get_num_devices(device_type);
+    int num_devices_per_node = cnrn_num_devices();
 
     // if no gpu found, can't run on GPU
     if (num_devices_per_node == 0) {
@@ -1434,9 +1468,8 @@ void init_gpu() {
 #endif
 
     int device_num = local_rank % num_devices_per_node;
-    acc_set_device_num(device_num, device_type);
+    cnrn_set_device(device_num);
 #ifdef CORENEURON_PREFER_OPENMP_OFFLOAD
-    omp_set_default_device(device_num);
 #endif
 
     if (nrnmpi_myid == 0 && !corenrn_param.is_quiet()) {
