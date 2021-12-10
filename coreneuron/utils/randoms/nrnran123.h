@@ -99,6 +99,13 @@ inline nrnran123_State* nrnran123_newstream(
 void nrnran123_deletestream(nrnran123_State* s,
                             bool use_unified_memory = CORENRN_RAN123_USE_UNIFIED_MEMORY);
 
+
+/* this could be called from openacc parallel construct (in INITIAL block) */
+CORENRN_HOST_DEVICE_ACC void nrnran123_setseq(nrnran123_State*, uint32_t seq, char which);
+
+#if defined(_OPENMP)
+#pragma omp declare target
+#endif
 /* minimal data stream */
 CORENRN_HOST_DEVICE_ACC void nrnran123_getseq(nrnran123_State*, uint32_t* seq, char* which);
 CORENRN_HOST_DEVICE_ACC void nrnran123_getids(nrnran123_State*, uint32_t* id1, uint32_t* id2);
@@ -111,9 +118,6 @@ CORENRN_HOST_DEVICE_ACC uint32_t nrnran123_ipick(nrnran123_State*); /* uniform 0
 /* this could be called from openacc parallel construct */
 CORENRN_HOST_DEVICE_ACC double nrnran123_dblpick(nrnran123_State*); /* uniform open interval (0,1)*/
 /* nrnran123_dblpick minimum value is 2.3283064e-10 and max value is 1-min */
-
-/* this could be called from openacc parallel construct (in INITIAL block) */
-CORENRN_HOST_DEVICE_ACC void nrnran123_setseq(nrnran123_State*, uint32_t seq, char which);
 
 CORENRN_HOST_DEVICE_ACC double nrnran123_negexp(nrnran123_State*); /* mean 1.0 */
 /* nrnran123_negexp min value is 2.3283064e-10, max is 22.18071 */
@@ -128,6 +132,9 @@ CORENRN_HOST_DEVICE_ACC nrnran123_array4x32 nrnran123_iran(uint32_t seq,
                                                            uint32_t id1,
                                                            uint32_t id2);
 CORENRN_HOST_DEVICE_ACC double nrnran123_uint2dbl(uint32_t);
+#if defined(_OPENMP)
+#pragma omp end declare target
+#endif
 }  // namespace coreneuron
 
 #endif
