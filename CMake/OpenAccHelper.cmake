@@ -39,12 +39,12 @@ if(CORENRN_ENABLE_GPU)
     # ${CMAKE_CUDA_COMPILER_VERSION}
     find_package(CUDAToolkit 9.0 REQUIRED)
     # Be a bit paranoid
-    # if(NOT ${CMAKE_CUDA_COMPILER_VERSION} STREQUAL ${CUDAToolkit_VERSION})
-    #   message(
-    #     FATAL_ERROR
-    #       "CUDA compiler (${CMAKE_CUDA_COMPILER_VERSION}) and toolkit (${CUDAToolkit_VERSION}) versions are not the same!"
-    #   )
-    # endif()
+    if(NOT ${CMAKE_CUDA_COMPILER_VERSION} STREQUAL ${CUDAToolkit_VERSION})
+      message(
+        FATAL_ERROR
+          "CUDA compiler (${CMAKE_CUDA_COMPILER_VERSION}) and toolkit (${CUDAToolkit_VERSION}) versions are not the same!"
+      )
+    endif()
     set(CORENRN_CUDA_VERSION_SHORT "${CUDAToolkit_VERSION_MAJOR}.${CUDAToolkit_VERSION_MINOR}")
   endif()
 
