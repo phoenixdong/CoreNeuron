@@ -82,9 +82,8 @@ void cnrn_target_delete(void* h_ptr, size_t len) {
     {
         d_ptr = h_ptr;
     }
-    // todo: disassociate first or free first
-    omp_target_free(d_ptr, device_id);
     omp_target_disassociate_ptr(h_ptr, device_id);
+    omp_target_free(d_ptr, device_id);
 #else
     throw std::runtime_error("cnrn_target_delete() not implemented without OpenACC/OpenMP and gpu build");
 #endif
