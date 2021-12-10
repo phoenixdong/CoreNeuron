@@ -55,7 +55,7 @@ if(CORENRN_ENABLE_GPU)
     if(CORENRN_ENABLE_OPENMP AND CORENRN_ENABLE_OPENMP_OFFLOAD)
       # Enable OpenMP target offload to GPU and if both OpenACC and OpenMP directives are available
       # for a region then prefer OpenMP.
-      add_compile_definitions(CORENRN_PREFER_OPENMP_OFFLOAD)
+      add_compile_definitions(CORENEURON_PREFER_OPENMP_OFFLOAD)
     endif()
   elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     set(NVHPC_ACC_COMP_FLAGS "-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda -Wno-unknown-cuda-version -I${CUDAToolkit_INCLUDE_DIRS}")
