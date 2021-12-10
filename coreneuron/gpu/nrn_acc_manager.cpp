@@ -27,13 +27,14 @@
 #ifdef _OPENACC
 #include <openacc.h>
 #endif
-#ifdef CORENEURON_PREFER_OPENMP_OFFLOAD
+#ifdef CORENRN_PREFER_OPENMP_OFFLOAD
 #include <omp.h>
 #endif
 
 #ifdef CRAYPAT
 #include <pat_api.h>
 #endif
+
 namespace coreneuron {
 extern InterleaveInfo* interleave_info;
 void copy_ivoc_vect_to_device(const IvocVect& iv, IvocVect& div, bool vector_copy_needed = false);
@@ -77,9 +78,14 @@ void cnrn_target_delete(void* h_ptr, size_t len) {
 #elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
     (void)len;
     auto device_id = omp_get_default_device();
-    omp_target_disassociate_ptr(h_ptr, device_id);
-    auto* d_ptr = omp_get_mapped_ptr(h_ptr, device_id);
+    void *d_ptr = nullptr;
+    nrn_pragma_omp(target data device(device_id) use_device_ptr(h_ptr))
+    {
+        d_ptr = h_ptr;
+    }
+    // todo: disassociate first or free first
     omp_target_free(d_ptr, device_id);
+    omp_target_disassociate_ptr(h_ptr, device_id);
 #else
     throw std::runtime_error("cnrn_target_delete() not implemented without OpenACC/OpenMP and gpu build");
 #endif
@@ -90,7 +96,12 @@ void* cnrn_target_deviceptr(void* h_ptr) {
     return acc_deviceptr(h_ptr);
 #elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
     auto device_id = omp_get_default_device();
-    return omp_get_mapped_ptr(h_ptr, device_id);
+    void *d_ptr = nullptr;
+    nrn_pragma_omp(target data device(device_id) use_device_ptr(h_ptr))
+    {
+        d_ptr = h_ptr;
+    }
+    return d_ptr;
 #else
     throw std::runtime_error("cnrn_target_delete() not implemented without OpenACC/OpenMP and gpu build");
 #endif
@@ -1425,7 +1436,7 @@ void init_gpu() {
 
     int device_num = local_rank % num_devices_per_node;
     acc_set_device_num(device_num, device_type);
-#ifdef CORENEURON_PREFER_OPENMP_OFFLOAD
+#ifdef CORENRN_PREFER_OPENMP_OFFLOAD
     omp_set_default_device(device_num);
 #endif
 
