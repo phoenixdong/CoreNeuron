@@ -303,7 +303,7 @@ set_target_properties(
 # create special-core with halfgap.mod for tests
 # =============================================================================
 set(all_output_binaries)
-if(NOT ${CORENRN_EXTERNAL_BENCHMARK_DATA} STREQUAL "")
+if(EXISTS "${CORENRN_EXTERNAL_BENCHMARK_DATA}")
   # Hack for the december 2021 hackathon, build an extra special-core with channel-benchmark
   # mechanisms.
   set(modfile_directory
