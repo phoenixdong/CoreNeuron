@@ -28,6 +28,5 @@ void update_net_send_buffer_on_host(NrnThread* nt, NetSendBuffer_t* nsb);
 
 void update_weights_from_gpu(NrnThread* threads, int nthreads);
 void init_gpu();
-
 }  // namespace coreneuron
 #endif  // _nrn_device_manager_

@@ -23,10 +23,13 @@
 #endif
 
 #include <cstddef>
+#include <iostream>
 
 namespace coreneuron {
 template <typename T>
-T* cnrn_target_deviceptr(const T* h_ptr) {
+#define cnrn_target_deviceptr(h_ptr) [&]() {std::cout << #h_ptr << std::endl; return cnrn_target_deviceptr2(h_ptr);}()
+T* cnrn_target_deviceptr2(const T* h_ptr) {
+    std::cout << "cnrn_target_device_ptr" << std::endl;
 #if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
     return static_cast<T*>(acc_deviceptr(const_cast<T*>(h_ptr)));
 #elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
@@ -46,6 +49,7 @@ T* cnrn_target_deviceptr(const T* h_ptr) {
 
 template <typename T>
 T* cnrn_target_copyin(const T* h_ptr, std::size_t len = 1) {
+    std::cout << "cnrn_target_copyin" << std::endl;
 #if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
     return static_cast<T*>(acc_copyin(const_cast<T*>(h_ptr), len * sizeof(T)));
 #elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
@@ -58,6 +62,7 @@ T* cnrn_target_copyin(const T* h_ptr, std::size_t len = 1) {
 
 template <typename T>
 void cnrn_target_delete(T* h_ptr, std::size_t len = 1) {
+    std::cout << "cnrn_target_delete" << std::endl;
 #if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
     acc_delete(h_ptr, len * sizeof(T));
 #elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
@@ -69,6 +74,7 @@ void cnrn_target_delete(T* h_ptr, std::size_t len = 1) {
 
 template <typename T>
 void cnrn_target_memcpy_to_device(T* d_ptr, const T* h_ptr, std::size_t len = 1) {
+    std::cout << "cnrn_target_memcpy_to_device" << std::endl;
 #if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
     acc_memcpy_to_device(d_ptr, const_cast<T*>(h_ptr), len * sizeof(T));
 #elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
