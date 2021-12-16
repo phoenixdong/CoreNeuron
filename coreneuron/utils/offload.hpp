@@ -30,7 +30,15 @@ T* cnrn_target_deviceptr(const T* h_ptr) {
 #if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENACC)
     return static_cast<T*>(acc_deviceptr(const_cast<T*>(h_ptr)));
 #elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
-    return static_cast<T*>(omp_get_mapped_ptr(const_cast<T*>(h_ptr), omp_get_default_device()));
+    T *d_ptr = nullptr;
+    T *_h_ptr = const_cast<T*>(h_ptr);
+
+    nrn_pragma_omp(target data use_device_ptr(_h_ptr))
+    {
+        d_ptr = _h_ptr;
+    }
+
+    return d_ptr;
 #else
     throw std::runtime_error("cnrn_target_deviceptr() not implemented without OpenACC/OpenMP and gpu build");
 #endif
@@ -42,7 +50,7 @@ T* cnrn_target_copyin(const T* h_ptr, std::size_t len = 1) {
     return static_cast<T*>(acc_copyin(const_cast<T*>(h_ptr), len * sizeof(T)));
 #elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
     #pragma omp target enter data map(to:h_ptr[:len])
-    return cnrn_target_deviceptr(const_cast<T*>(h_ptr));
+    return cnrn_target_deviceptr(h_ptr);
 #else
     throw std::runtime_error("cnrn_target_copyin() not implemented without OpenACC/OpenMP and gpu build");
 #endif
