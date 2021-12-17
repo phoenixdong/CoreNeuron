@@ -6,8 +6,6 @@
 # =============================================================================
 */
 #pragma once
-#include <cstddef>
-
 #define nrn_pragma_stringify(x) #x
 #if defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && defined(_OPENMP)
 #define nrn_pragma_acc(x)
