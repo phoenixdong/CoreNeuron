@@ -533,7 +533,7 @@ void NetCvode::check_thresh(NrnThread* nt) {  // for default method
 
     nrn_pragma_acc(parallel loop present(
         nt [0:1], presyns_helper [0:nt->n_presyn], presyns [0:nt->n_presyn], actual_v [0:nt->end])
-                       copy(net_send_buf_count) if (nt->compute_gpu) async(nt->stream_id))
+                       copy(net_send_buf_count) if (nt->compute_gpu) async(nt->streams[nt->stream_id]))
     nrn_pragma_omp(target teams distribute parallel for map(tofrom: net_send_buf_count) if(nt->compute_gpu))
     for (int i = 0; i < nt->ncell; ++i) {
         PreSyn* ps = presyns + i;
@@ -561,15 +561,15 @@ void NetCvode::check_thresh(NrnThread* nt) {  // for default method
             nt->_net_send_buffer[idx] = i;
         }
     }
-    nrn_pragma_acc(wait(nt->stream_id))
+    nrn_pragma_acc(wait(nt->streams[nt->stream_id]))
     nt->_net_send_buffer_cnt = net_send_buf_count;
 
     if (nt->compute_gpu && nt->_net_send_buffer_cnt) {
 #ifdef CORENEURON_ENABLE_GPU
         int* nsbuffer = nt->_net_send_buffer;
 #endif
-        nrn_pragma_acc(update host(nsbuffer [0:nt->_net_send_buffer_cnt]) async(nt->stream_id))
-        nrn_pragma_acc(wait(nt->stream_id))
+        nrn_pragma_acc(update host(nsbuffer [0:nt->_net_send_buffer_cnt]) async(nt->streams[nt->stream_id]))
+        nrn_pragma_acc(wait(nt->streams[nt->stream_id]))
         nrn_pragma_omp(target update from(nsbuffer [0:nt->_net_send_buffer_cnt]))
     }
 

@@ -56,13 +56,13 @@ void nrnmpi_v_transfer() {
         nrn_pragma_acc(parallel loop present(src_indices [0:n_src_gather],
                                              src_data [0:nt->_ndata],
                                              src_gather [0:n_src_gather]) if (nt->compute_gpu)
-                           async(nt->stream_id))
+                           async(nt->streams[nt->stream_id]))
         nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
         for (int i = 0; i < n_src_gather; ++i) {
             src_gather[i] = src_data[src_indices[i]];
         }
         nrn_pragma_acc(update host(src_gather [0:n_src_gather]) if (nt->compute_gpu)
-                           async(nt->stream_id))
+                           async(nt->streams[nt->stream_id]))
         nrn_pragma_omp(target update from(src_gather [0:n_src_gather]) if (nt->compute_gpu))
     }
 
@@ -71,7 +71,7 @@ void nrnmpi_v_transfer() {
     for (int tid = 0; tid < nrn_nthread; ++tid) {
         if (nrn_threads[tid].compute_gpu) {
             compute_gpu = true;
-            nrn_pragma_acc(wait(nrn_threads[tid].stream_id))
+            nrn_pragma_acc(wait(nrn_threads[tid].streams[nrn_threads[tid].stream_id]))
         }
         TransferThreadData& ttd = transfer_thread_data_[tid];
         size_t n_outsrc_indices = ttd.outsrc_indices.size();
@@ -122,7 +122,7 @@ void nrnthread_v_transfer(NrnThread* _nt) {
     nrn_pragma_acc(parallel loop present(insrc_indices [0:ntar],
                                          tar_data [0:ndata],
                                          insrc_buf_ [0:n_insrc_buf]) if (_nt->compute_gpu)
-                       async(_nt->stream_id))
+                       async(_nt->streams[_nt->stream_id])
     nrn_pragma_omp(target teams distribute parallel for simd map(to: tar_indices[0:ntar]) if(_nt->compute_gpu))
     for (size_t i = 0; i < ntar; ++i) {
         tar_data[tar_indices[i]] = insrc_buf_[insrc_indices[i]];

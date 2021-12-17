@@ -606,7 +606,7 @@ void solve_interleaved2(int ith) {
                               ncycles [0:nwarp],
                               stridedispl [0:nwarp + 1],
                               rootbegin [0:nwarp + 1],
-                              nodebegin [0:nwarp + 1]) if (nt->compute_gpu) async(nt->stream_id))
+                              nodebegin [0:nwarp + 1]) if (nt->compute_gpu) async(nt->streams[nt->stream_id]))
         nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
         for (int icore = 0; icore < ncore; ++icore) {
             int iwarp = icore / warpsize;     // figure out the >> value
@@ -626,7 +626,7 @@ void solve_interleaved2(int ith) {
             }  // serial test mode
 #endif
         }
-        nrn_pragma_acc(wait(nt->stream_id))
+        nrn_pragma_acc(wait(nt->streams[nt->stream_id]))
 #ifdef _OPENACC
     }
 #endif
@@ -660,14 +660,14 @@ void solve_interleaved1(int ith) {
                                          firstnode [0:ncell],
                                          lastnode [0:ncell],
                                          cellsize [0:ncell]) if (nt->compute_gpu)
-                       async(nt->stream_id))
+                       async(nt->streams[nt->stream_id]))
     nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
     for (int icell = 0; icell < ncell; ++icell) {
         int icellsize = cellsize[icell];
         triang_interleaved(nt, icell, icellsize, nstride, stride, lastnode);
         bksub_interleaved(nt, icell, icellsize, nstride, stride, firstnode);
     }
-    nrn_pragma_acc(wait(nt->stream_id))
+    nrn_pragma_acc(wait(nt->streams[nt->stream_id]))
 }
 
 void solve_interleaved(int ith) {

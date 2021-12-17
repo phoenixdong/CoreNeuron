@@ -52,7 +52,7 @@ void nrn_calc_fast_imem(NrnThread* nt) {
     double* fast_imem_rhs = nt->nrn_fast_imem->nrn_sav_rhs;
     nrn_pragma_acc(
         parallel loop present(vec_rhs, vec_area, fast_imem_d, fast_imem_rhs) if (nt->compute_gpu)
-            async(nt->stream_id))
+            async(nt->streams[nt->stream_id]))
     nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
     for (int i = i1; i < i3; ++i) {
         fast_imem_rhs[i] = (fast_imem_d[i] * vec_rhs[i] + fast_imem_rhs[i]) * vec_area[i] * 0.01;
@@ -69,7 +69,7 @@ void nrn_calc_fast_imem_init(NrnThread* nt) {
 
     double* fast_imem_rhs = nt->nrn_fast_imem->nrn_sav_rhs;
     nrn_pragma_acc(parallel loop present(vec_rhs, vec_area, fast_imem_rhs) if (nt->compute_gpu)
-                       async(nt->stream_id))
+                       async(nt->streams[nt->stream_id]))
     nrn_pragma_omp(target teams distribute parallel for simd if(nt->compute_gpu))
     for (int i = i1; i < i3; ++i) {
         fast_imem_rhs[i] = (vec_rhs[i] + fast_imem_rhs[i]) * vec_area[i] * 0.01;
