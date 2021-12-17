@@ -55,15 +55,15 @@ void init_net_events() {
         net_cvode_instance->init_events();
     }
 
-#if defined(_OPENACC)
+#ifdef CORENEURON_ENABLE_GPU
     /* weight vectors could be updated (from INITIAL block of NET_RECEIVE, update those on GPU's */
     for (int ith = 0; ith < nrn_nthread; ++ith) {
         NrnThread* nt = nrn_threads + ith;
         double* weights = nt->weights;
         int n_weight = nt->n_weight;
         if (n_weight && nt->compute_gpu) {
-            nrn_pragma_acc(update device(weights[0:n_weight]))
-            nrn_pragma_omp(target update to(weights[0:n_weight]))
+            nrn_pragma_acc(update device(weights [0:n_weight]))
+            nrn_pragma_omp(target update to(weights [0:n_weight]))
         }
     }
 #endif
