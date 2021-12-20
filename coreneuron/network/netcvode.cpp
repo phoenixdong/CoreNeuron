@@ -534,7 +534,7 @@ void NetCvode::check_thresh(NrnThread* nt) {  // for default method
     nrn_pragma_acc(parallel loop present(
         nt [0:1], presyns_helper [0:nt->n_presyn], presyns [0:nt->n_presyn], actual_v [0:nt->end])
                        copy(net_send_buf_count) if (nt->compute_gpu) async(nt->streams[nt->stream_id]))
-    nrn_pragma_omp(target teams distribute parallel for map(tofrom: net_send_buf_count) if(nt->compute_gpu))
+    nrn_pragma_omp(target teams distribute parallel for map(tofrom: net_send_buf_count) if(nt->compute_gpu) depend(inout: nt->streams[nt->stream_id]) nowait)
     for (int i = 0; i < nt->ncell; ++i) {
         PreSyn* ps = presyns + i;
         PreSynHelper* psh = presyns_helper + i;
@@ -562,6 +562,7 @@ void NetCvode::check_thresh(NrnThread* nt) {  // for default method
         }
     }
     nrn_pragma_acc(wait async(nt->streams[nt->stream_id]))
+    nrn_pragma_omp(taskwait)
     nt->_net_send_buffer_cnt = net_send_buf_count;
 
     if (nt->compute_gpu && nt->_net_send_buffer_cnt) {
