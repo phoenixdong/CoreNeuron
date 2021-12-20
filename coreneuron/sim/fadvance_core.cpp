@@ -319,7 +319,7 @@ void nrncore2nrn_send_values(NrnThread* nth) {
                                    async(nth->streams[nth->stream_id]))
                 nrn_pragma_omp(target update from(gather_i [0:1]) if (nth->compute_gpu))
             }
-            nrn_pragma_acc(wait(nth->streams[nth->stream_id))
+            nrn_pragma_acc(wait(nth->streams[nth->stream_id]))
             for (int i = 0; i < tr->n_trajec; ++i) {
                 *(tr->scatter[i]) = *(tr->gather[i]);
             }
@@ -342,7 +342,7 @@ static void* nrn_fixed_step_thread(NrnThread* nth) {
         /*@todo: do we need to update nth->_t on GPU: Yes (Michael, but can
         launch kernel) */
         nrn_pragma_acc(update device(nth->_t) if (nth->compute_gpu) async(nth->streams[nth->stream_id]))
-        nrn_pragma_acc(wait(nth->streams[nth->stream_id)))
+        nrn_pragma_acc(wait(nth->streams[nth->stream_id]))
         nrn_pragma_omp(target update to(nth->_t) if (nth->compute_gpu))
         fixed_play_continuous(nth);
 
@@ -378,7 +378,7 @@ void* nrn_fixed_step_lastpart(NrnThread* nth) {
     if (nth->ncell) {
         /*@todo: do we need to update nth->_t on GPU */
         nrn_pragma_acc(update device(nth->_t) if (nth->compute_gpu) async(nth->streams[nth->stream_id]))
-        nrn_pragma_acc(wait(nth->streams[nth->stream_id)))
+        nrn_pragma_acc(wait(nth->streams[nth->stream_id]))
         nrn_pragma_omp(target update to(nth->_t) if (nth->compute_gpu))
         fixed_play_continuous(nth);
         nonvint(nth);
