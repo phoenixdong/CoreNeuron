@@ -15,6 +15,10 @@
 #include "coreneuron/coreneuron.hpp"
 #include "coreneuron/utils/nrnoc_aux.hpp"
 
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
+
 /*
 Now that threads have taken over the actual_v, v_node, etc, it might
 be a good time to regularize the method of freeing, allocating, and

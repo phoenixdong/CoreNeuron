@@ -75,7 +75,7 @@ static void bksub(NrnThread* _nt) {
     }
 
     if (_nt->compute_gpu) {
-        nrn_pragma_acc(wait(_nt->streams[_nth->stream_id]))
+        nrn_pragma_acc(wait(_nt->streams[_nt->stream_id]))
     }
 }
 }  // namespace coreneuron

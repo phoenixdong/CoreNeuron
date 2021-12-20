@@ -206,14 +206,14 @@ void update(NrnThread* _nt) {
     /* do not need to worry about linmod or extracellular*/
     if (secondorder) {
         nrn_pragma_acc(parallel loop present(vec_v [0:i2], vec_rhs [0:i2]) if (_nt->compute_gpu)
-                           async(_nt->streams[_nt->stream_id])
+                           async(_nt->streams[_nt->stream_id]))
         nrn_pragma_omp(target teams distribute parallel for simd if(_nt->compute_gpu))
         for (int i = 0; i < i2; ++i) {
             vec_v[i] += 2. * vec_rhs[i];
         }
     } else {
         nrn_pragma_acc(parallel loop present(vec_v [0:i2], vec_rhs [0:i2]) if (_nt->compute_gpu)
-                           async(_nt->streams[_nt->stream_id])
+                           async(_nt->streams[_nt->stream_id]))
         nrn_pragma_omp(target teams distribute parallel for simd if(_nt->compute_gpu))
         for (int i = 0; i < i2; ++i) {
             vec_v[i] += vec_rhs[i];
@@ -319,7 +319,7 @@ void nrncore2nrn_send_values(NrnThread* nth) {
                                    async(nth->streams[nth->stream_id]))
                 nrn_pragma_omp(target update from(gather_i [0:1]) if (nth->compute_gpu))
             }
-            nrn_pragma_acc(wait(nth->streams[nth->stream_id)))
+            nrn_pragma_acc(wait(nth->streams[nth->stream_id))
             for (int i = 0; i < tr->n_trajec; ++i) {
                 *(tr->scatter[i]) = *(tr->gather[i]);
             }
