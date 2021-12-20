@@ -561,7 +561,7 @@ void NetCvode::check_thresh(NrnThread* nt) {  // for default method
             nt->_net_send_buffer[idx] = i;
         }
     }
-    nrn_pragma_acc(wait(nt->streams[nt->stream_id]))
+    nrn_pragma_acc(wait async(nt->streams[nt->stream_id]))
     nt->_net_send_buffer_cnt = net_send_buf_count;
 
     if (nt->compute_gpu && nt->_net_send_buffer_cnt) {
@@ -569,7 +569,7 @@ void NetCvode::check_thresh(NrnThread* nt) {  // for default method
         int* nsbuffer = nt->_net_send_buffer;
 #endif
         nrn_pragma_acc(update host(nsbuffer [0:nt->_net_send_buffer_cnt]) async(nt->streams[nt->stream_id]))
-        nrn_pragma_acc(wait(nt->streams[nt->stream_id]))
+        nrn_pragma_acc(wait async(nt->streams[nt->stream_id]))
         nrn_pragma_omp(target update from(nsbuffer [0:nt->_net_send_buffer_cnt]))
     }
 

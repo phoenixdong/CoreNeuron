@@ -749,7 +749,7 @@ void update_net_receive_buffer(NrnThread* nt) {
             }
         }
     }
-    nrn_pragma_acc(wait(nt->streams[nt->stream_id]))
+    nrn_pragma_acc(wait async(nt->streams[nt->stream_id]))
 }
 
 void update_net_send_buffer_on_host(NrnThread* nt, NetSendBuffer_t* nsb) {

@@ -626,7 +626,7 @@ void solve_interleaved2(int ith) {
             }  // serial test mode
 #endif
         }
-        nrn_pragma_acc(wait(nt->streams[nt->stream_id]))
+        nrn_pragma_acc(wait async(nt->streams[nt->stream_id]))
 #ifdef _OPENACC
     }
 #endif
@@ -667,7 +667,7 @@ void solve_interleaved1(int ith) {
         triang_interleaved(nt, icell, icellsize, nstride, stride, lastnode);
         bksub_interleaved(nt, icell, icellsize, nstride, stride, firstnode);
     }
-    nrn_pragma_acc(wait(nt->streams[nt->stream_id]))
+    nrn_pragma_acc(wait async(nt->streams[nt->stream_id]))
 }
 
 void solve_interleaved(int ith) {
