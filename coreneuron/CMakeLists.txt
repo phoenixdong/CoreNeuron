@@ -288,6 +288,7 @@ if(CORENRN_ENABLE_GPU)
   # nrnran123.cpp possibly-temporarily uses Boost.Pool in GPU builds if it's available.
   find_package(Boost QUIET)
   if(Boost_FOUND)
+    message(STATUS "Boost found, enabling use of memory pools for Random123...")
     target_include_directories(coreneuron SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
     target_compile_definitions(coreneuron PRIVATE CORENEURON_USE_BOOST_POOL)
   endif()
@@ -302,38 +303,6 @@ set_target_properties(
 # =============================================================================
 # create special-core with halfgap.mod for tests
 # =============================================================================
-set(all_output_binaries)
-if(EXISTS "${CORENRN_EXTERNAL_BENCHMARK_DATA}")
-  # Hack for the december 2021 hackathon, build an extra special-core with channel-benchmark
-  # mechanisms.
-  set(modfile_directory
-      "${CORENRN_EXTERNAL_BENCHMARK_DATA}/channel-benchmark/benchmark/channels/lib/modlib")
-  file(GLOB modfiles "${modfile_directory}/*.mod")
-  set(output_binaries "${CMAKE_BINARY_DIR}/benchmark/${CMAKE_SYSTEM_PROCESSOR}/special-core"
-                      "${CMAKE_BINARY_DIR}/benchmark/${CMAKE_SYSTEM_PROCESSOR}/libcorenrnmech.a")
-  file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/benchmark)
-  add_custom_command(
-    OUTPUT ${output_binaries}
-    DEPENDS scopmath coreneuron ${NMODL_TARGET_TO_DEPEND} ${modfiles} ${CORENEURON_BUILTIN_MODFILES}
-    COMMAND ${CMAKE_BINARY_DIR}/bin/nrnivmodl-core -b STATIC -m ${CORENRN_MOD2CPP_BINARY} -p 6
-            "${modfile_directory}"
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/benchmark
-    COMMENT "Running nrnivmodl-core for channel-benchmark mechanisms")
-  list(APPEND all_output_binaries ${output_binaries})
-  list(JOIN TEST_EXEC_PREFIX " " BENCHMARK_SRUN_COMAND)
-  string(
-    CONCAT benchmark_command
-           "OMP_NUM_THREADS=1 ${BENCHMARK_SRUN_COMAND} "
-           "'${CMAKE_BINARY_DIR}/benchmark/${CMAKE_SYSTEM_PROCESSOR}/special-core'"
-           " --datpath '${CORENRN_EXTERNAL_BENCHMARK_DATA}/channel-benchmark-all-440-cells-2-ranks'"
-           " --tstop 1 --mpi")
-  if(CORENRN_ENABLE_GPU)
-    string(APPEND benchmark_command " --gpu --cell-permute=2")
-  endif()
-  string(APPEND benchmark_command " && diff out.dat "
-         "'${CORENRN_EXTERNAL_BENCHMARK_DATA}/channel-benchmark-all-440-cells-2-ranks.gpu.spikes'")
-  add_test(NAME benchmark COMMAND sh -c "${benchmark_command}")
-endif()
 set(modfile_directory "${CORENEURON_PROJECT_SOURCE_DIR}/tests/integration/ring_gap/mod")
 file(GLOB modfiles "${modfile_directory}/*.mod")
 set(output_binaries "${CMAKE_BINARY_DIR}/bin/${CMAKE_SYSTEM_PROCESSOR}/special-core"
@@ -345,8 +314,7 @@ add_custom_command(
           "${modfile_directory}"
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
   COMMENT "Running nrnivmodl-core with halfgap.mod")
-list(APPEND all_output_binaries ${output_binaries})
-add_custom_target(nrniv-core ALL DEPENDS ${all_output_binaries})
+add_custom_target(nrniv-core ALL DEPENDS ${output_binaries})
 
 include_directories(${CORENEURON_PROJECT_SOURCE_DIR})
 

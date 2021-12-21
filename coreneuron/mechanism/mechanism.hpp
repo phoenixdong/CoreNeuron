@@ -16,7 +16,6 @@
 namespace coreneuron {
 // OpenACC with PGI compiler has issue when union is used and hence use struct
 // \todo check if newer PGI versions has resolved this issue
-// OL211214: bump
 #if defined(_OPENACC)
 struct ThreadDatum {
     int i;
