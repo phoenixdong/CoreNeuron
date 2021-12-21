@@ -152,8 +152,10 @@ static void nrn_lhs(NrnThread* _nt) {
            so here we transform so it only has membrane current contribution
         */
         double* p = _nt->nrn_fast_imem->nrn_sav_d;
-        nrn_pragma_acc(parallel loop present(p, vec_d) if (_nt->compute_gpu) async(_nt->streams[_nt->stream_id]))
-        nrn_pragma_omp(target teams distribute parallel for if(_nt->compute_gpu) depend(inout: _nt->streams[_nt->stream_id]) nowait)
+        nrn_pragma_acc(parallel loop present(p, vec_d) if (_nt->compute_gpu)
+                           async(_nt->streams[_nt->stream_id]))
+        nrn_pragma_omp(target teams distribute parallel for if(_nt->compute_gpu)
+                           depend(inout: _nt->streams[_nt->stream_id]) nowait)
         for (int i = i1; i < i3; ++i) {
             p[i] += vec_d[i];
         }
