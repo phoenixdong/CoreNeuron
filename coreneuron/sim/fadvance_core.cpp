@@ -317,7 +317,7 @@ void nrncore2nrn_send_values(NrnThread* nth) {
                 double* gather_i = tr->gather[i];
                 nrn_pragma_acc(update self(gather_i [0:1]) if (nth->compute_gpu)
                                    async(nth->streams[nth->stream_id]))
-                nrn_pragma_omp(target update from(gather_i [0:1]) if (nth->compute_gpu))
+                nrn_pragma_omp(target update from(gather_i [0:1]) if (nth->compute_gpu) depend(inout: nth->streams[nth->stream_id]) nowait)
             }
             nrn_pragma_acc(wait async(nth->streams[nth->stream_id]))
             for (int i = 0; i < tr->n_trajec; ++i) {
@@ -344,7 +344,6 @@ static void* nrn_fixed_step_thread(NrnThread* nth) {
         nrn_pragma_acc(update device(nth->_t) if (nth->compute_gpu) async(nth->streams[nth->stream_id]))
         nrn_pragma_acc(wait async(nth->streams[nth->stream_id]))
         nrn_pragma_omp(target update to(nth->_t) if (nth->compute_gpu))
-        nrn_pragma_omp(taskwait)
         fixed_play_continuous(nth);
 
         {
@@ -381,7 +380,6 @@ void* nrn_fixed_step_lastpart(NrnThread* nth) {
         nrn_pragma_acc(update device(nth->_t) if (nth->compute_gpu) async(nth->streams[nth->stream_id]))
         nrn_pragma_acc(wait async(nth->streams[nth->stream_id]))
         nrn_pragma_omp(target update to(nth->_t) if (nth->compute_gpu))
-        nrn_pragma_omp(taskwait)
         fixed_play_continuous(nth);
         nonvint(nth);
         nrncore2nrn_send_values(nth);

@@ -63,7 +63,7 @@ void nrnmpi_v_transfer() {
         }
         nrn_pragma_acc(update host(src_gather [0:n_src_gather]) if (nt->compute_gpu)
                            async(nt->streams[nt->stream_id]))
-        nrn_pragma_omp(target update from(src_gather [0:n_src_gather]) if (nt->compute_gpu))
+        nrn_pragma_omp(target update from(src_gather [0:n_src_gather]) if (nt->compute_gpu) depend(inout: nt->streams[nt->stream_id]) nowait)
     }
 
     // copy gathered source values to outsrc_buf_

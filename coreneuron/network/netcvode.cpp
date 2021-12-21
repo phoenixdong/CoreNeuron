@@ -571,7 +571,8 @@ void NetCvode::check_thresh(NrnThread* nt) {  // for default method
 #endif
         nrn_pragma_acc(update host(nsbuffer [0:nt->_net_send_buffer_cnt]) async(nt->streams[nt->stream_id]))
         nrn_pragma_acc(wait async(nt->streams[nt->stream_id]))
-        nrn_pragma_omp(target update from(nsbuffer [0:nt->_net_send_buffer_cnt]))
+        nrn_pragma_omp(target update from(nsbuffer [0:nt->_net_send_buffer_cnt]) depend(inout: nt->streams[nt->stream_id]) nowait)
+        nrn_pragma_omp(taskwait)
     }
 
     // on CPU...
