@@ -82,7 +82,7 @@ void dt2thread(double adt) { /* copied from nrnoc/fadvance.c */
                                async(nt->streams[nt->stream_id]) if (nt->compute_gpu))
             // clang-format off
             nrn_pragma_omp(target update to(nt->_t, nt->_dt, nt->cj)
-                            if(nt->compute_gpu))
+                                         if(nt->compute_gpu))
             // clang-format on
         }
     }
