@@ -320,13 +320,15 @@ if(EXISTS "${CORENRN_EXTERNAL_BENCHMARK_DATA}")
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/benchmark
     COMMENT "Running nrnivmodl-core for channel-benchmark mechanisms")
   list(APPEND all_output_binaries ${output_binaries})
+  list(JOIN TEST_EXEC_PREFIX " " BENCHMARK_SRUN_COMAND)
   string(
     CONCAT benchmark_command
+           "OMP_NUM_THREADS=1 ${BENCHMARK_SRUN_COMAND} "
            "'${CMAKE_BINARY_DIR}/benchmark/${CMAKE_SYSTEM_PROCESSOR}/special-core'"
            " --datpath '${CORENRN_EXTERNAL_BENCHMARK_DATA}/channel-benchmark-all-440-cells-2-ranks'"
            " --tstop 1 --mpi")
   if(CORENRN_ENABLE_GPU)
-    string(APPEND benchmark_command " --gpu")
+    string(APPEND benchmark_command " --gpu --cell-permute=2")
   endif()
   string(APPEND benchmark_command " && diff out.dat "
          "'${CORENRN_EXTERNAL_BENCHMARK_DATA}/channel-benchmark-all-440-cells-2-ranks.gpu.spikes'")
