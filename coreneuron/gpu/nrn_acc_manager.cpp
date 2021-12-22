@@ -68,8 +68,8 @@ void cnrn_target_set_default_device(int device_num) {
     // is not enough: there were errors on some nodes when not-the-0th GPU was
     // used. These seemed to be related to the NMODL instance structs, which are
     // allocated using cudaMallocManaged.
-    //auto const cuda_code = cudaSetDevice(device_num);
-    //assert(cuda_code == cudaSuccess);
+    auto const cuda_code = cudaSetDevice(device_num);
+    assert(cuda_code == cudaSuccess);
 #else
     throw std::runtime_error(
         "cnrn_target_set_default_device() not implemented without OpenACC/OpenMP and gpu build");
