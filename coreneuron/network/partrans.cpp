@@ -72,7 +72,6 @@ void nrnmpi_v_transfer() {
         if (nrn_threads[tid].compute_gpu) {
             compute_gpu = true;
             nrn_pragma_acc(wait(nrn_threads[tid].stream_id))
-            nrn_pragma_omp(taskwait)
         }
         TransferThreadData& ttd = transfer_thread_data_[tid];
         size_t n_outsrc_indices = ttd.outsrc_indices.size();

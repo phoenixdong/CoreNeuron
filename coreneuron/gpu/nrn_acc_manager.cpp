@@ -750,7 +750,6 @@ void update_net_receive_buffer(NrnThread* nt) {
         }
     }
     nrn_pragma_acc(wait(nt->stream_id))
-    nrn_pragma_omp(taskwait)
 }
 
 void update_net_send_buffer_on_host(NrnThread* nt, NetSendBuffer_t* nsb) {
