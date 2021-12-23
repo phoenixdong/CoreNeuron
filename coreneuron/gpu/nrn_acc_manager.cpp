@@ -39,7 +39,7 @@ void delete_ivoc_vect_from_device(IvocVect&);
 void nrn_ion_global_map_copyto_device();
 void nrn_ion_global_map_delete_from_device();
 void nrn_VecPlay_copyto_device(NrnThread* nt, void** d_vecplay);
-void nrn_VecPlay_delete_from_device(NrnThread* nt);
+void nrn_VecPlay_delete_from_device(const NrnThread* nt);
 
 int cnrn_target_get_num_devices() {
 #if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && \
@@ -214,14 +214,14 @@ static void update_ml_on_host(const Memb_list* ml, int type) {
     // clang-format on
 }
 
-static void delete_ml_from_device(Memb_list* ml, int type) {
+static void delete_ml_from_device(const Memb_list* ml, int type) {
     int is_art = corenrn.get_is_artificial()[type];
     if (is_art) {
         return;
     }
     // Cleanup the net send buffer if it exists
     {
-        NetSendBuffer_t* nsb{ml->_net_send_buffer};
+        const NetSendBuffer_t* nsb{ml->_net_send_buffer};
         if (nsb) {
             cnrn_target_delete(nsb->_nsb_flag, nsb->_size);
             cnrn_target_delete(nsb->_nsb_t, nsb->_size);
@@ -234,7 +234,7 @@ static void delete_ml_from_device(Memb_list* ml, int type) {
     }
     // Cleanup the net receive buffer if it exists.
     {
-        NetReceiveBuffer_t* nrb{ml->_net_receive_buffer};
+        const NetReceiveBuffer_t* nrb{ml->_net_receive_buffer};
         if (nrb) {
             cnrn_target_delete(nrb->_nrb_index, nrb->_size);
             cnrn_target_delete(nrb->_displ, nrb->_size + 1);
@@ -583,7 +583,7 @@ void copy_ivoc_vect_to_device(const IvocVect& from, IvocVect& to) {
 #endif
 }
 
-void delete_ivoc_vect_from_device(IvocVect& vec) {
+void delete_ivoc_vect_from_device(const IvocVect& vec) {
 #ifdef CORENEURON_ENABLE_GPU
     auto const n = vec.size();
     if (n) {
@@ -927,12 +927,12 @@ void update_weights_from_gpu(NrnThread* threads, int nthreads) {
  *  The pattern above is typical of calling CoreNEURON on GPU multiple times in
  *  the same process.
  */
-void delete_nrnthreads_on_device(NrnThread* threads, int nthreads) {
+void delete_nrnthreads_on_device(const NrnThread* threads, int nthreads) {
 #ifdef CORENEURON_ENABLE_GPU
     for (int i = 0; i < nthreads; i++) {
-        NrnThread* nt = threads + i;
+        const NrnThread* nt = threads + i;
         {
-            TrajectoryRequests* tr = nt->trajec_requests;
+            const TrajectoryRequests* tr = nt->trajec_requests;
             if (tr) {
                 if (tr->varrays) {
                     for (int i = 0; i < tr->n_trajec; ++i) {
@@ -946,14 +946,14 @@ void delete_nrnthreads_on_device(NrnThread* threads, int nthreads) {
         }
         if (nt->_permute) {
             if (interleave_permute_type == 1) {
-                InterleaveInfo* info = interleave_info + i;
+                const InterleaveInfo* info = interleave_info + i;
                 cnrn_target_delete(info->cellsize, nt->ncell);
                 cnrn_target_delete(info->lastnode, nt->ncell);
                 cnrn_target_delete(info->firstnode, nt->ncell);
                 cnrn_target_delete(info->stride, info->nstride + 1);
                 cnrn_target_delete(info);
             } else if (interleave_permute_type == 2) {
-                InterleaveInfo* info = interleave_info + i;
+                const InterleaveInfo* info = interleave_info + i;
                 cnrn_target_delete(info->cellsize, info->nwarp);
                 cnrn_target_delete(info->stridedispl, info->nwarp + 1);
                 cnrn_target_delete(info->lastnode, info->nwarp + 1);
@@ -1061,7 +1061,7 @@ void nrn_newtonspace_copyto_device(NewtonSpace* ns) {
 #endif
 }
 
-void nrn_newtonspace_delete_from_device(NewtonSpace* ns) {
+void nrn_newtonspace_delete_from_device(const NewtonSpace* ns) {
 #ifdef CORENEURON_ENABLE_GPU
     // FIXME this check needs to be tweaked if we ever want to run with a mix
     //       of CPU and GPU threads.
@@ -1163,7 +1163,7 @@ void nrn_sparseobj_copyto_device(SparseObj* so) {
 #endif
 }
 
-void nrn_sparseobj_delete_from_device(SparseObj* so) {
+void nrn_sparseobj_delete_from_device(const SparseObj* so) {
 #ifdef CORENEURON_ENABLE_GPU
     // FIXME this check needs to be tweaked if we ever want to run with a mix
     //       of CPU and GPU threads.
@@ -1172,7 +1172,7 @@ void nrn_sparseobj_delete_from_device(SparseObj* so) {
     }
     unsigned n1 = so->neqn + 1;
     for (unsigned irow = 1; irow < n1; ++irow) {
-        for (Elm* elm = so->rowst[irow]; elm; elm = elm->c_right) {
+        for (const Elm* elm = so->rowst[irow]; elm; elm = elm->c_right) {
             cnrn_target_delete(elm->value, so->_cntml_padded);
             cnrn_target_delete(elm);
         }
@@ -1283,9 +1283,9 @@ void nrn_VecPlay_copyto_device(NrnThread* nt, void** d_vecplay) {
     }
 }
 
-void nrn_VecPlay_delete_from_device(NrnThread* nt) {
+void nrn_VecPlay_delete_from_device(const NrnThread* nt) {
     for (int i = 0; i < nt->n_vecplay; i++) {
-        auto* vecplay_instance = reinterpret_cast<VecPlayContinuous*>(nt->_vecplay[i]);
+        const auto* vecplay_instance = reinterpret_cast<VecPlayContinuous*>(nt->_vecplay[i]);
         cnrn_target_delete(vecplay_instance->e_);
         if (vecplay_instance->discon_indices_) {
             delete_ivoc_vect_from_device(*(vecplay_instance->discon_indices_));

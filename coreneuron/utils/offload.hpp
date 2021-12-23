@@ -60,13 +60,14 @@ T* cnrn_target_copyin(const T* h_ptr, std::size_t len = 1) {
 }
 
 template <typename T>
-void cnrn_target_delete(T* h_ptr, std::size_t len = 1) {
+void cnrn_target_delete(const T* h_ptr, std::size_t len = 1) {
 #if defined(CORENEURON_ENABLE_GPU) && !defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && \
     defined(_OPENACC)
-    acc_delete(h_ptr, len * sizeof(T));
+    acc_delete(const_cast<T*>(h_ptr), len * sizeof(T));
 #elif defined(CORENEURON_ENABLE_GPU) && defined(CORENEURON_PREFER_OPENMP_OFFLOAD) && \
     defined(_OPENMP)
-    nrn_pragma_omp(target exit data map(delete : h_ptr[:len]))
+    T* h_ptr_ = const_cast<T*>(h_ptr);
+    nrn_pragma_omp(target exit data map(delete : h_ptr_[:len]))
 #else
     throw std::runtime_error(
         "cnrn_target_delete() not implemented without OpenACC/OpenMP and gpu build");
