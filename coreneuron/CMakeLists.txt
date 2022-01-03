@@ -32,6 +32,8 @@ file(
   "utils/*/*.c"
   "utils/*/*.cpp")
 file(GLOB_RECURSE CORENEURON_CUDA_FILES "*.cu")
+list(REMOVE_ITEM CORENEURON_CUDA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/permute/cellorder.cu")
+list(REMOVE_ITEM CORENEURON_CUDA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/utils/profile/cuda_profile.cu")
 list(REMOVE_ITEM CORENEURON_CUDA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/utils/randoms/nrnran123.cu")
 set(SCOPMATH_CODE_FILES
     "sim/scopmath/abort.cpp" "sim/scopmath/crout_thread.cpp" "sim/scopmath/newton_thread.cpp"
