@@ -419,6 +419,9 @@ endif()
 # =============================================================================
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNORE_UNKNOWN_PRAGMA_FLAGS}")
 
+# Set coreneuron specific linker flag after NMODL submodule is added
+string(APPEND CMAKE_EXE_LINKER_FLAGS " ${NVHPC_ACC_COMP_FLAGS}")
+
 # =============================================================================
 # Add main directories
 # =============================================================================
