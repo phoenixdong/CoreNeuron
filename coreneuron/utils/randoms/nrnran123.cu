@@ -76,7 +76,9 @@ using random123_allocator = coreneuron::unified_allocator<coreneuron::nrnran123_
  * shutdown. If the destructor calls cudaFree and the CUDA runtime has already
  * been shut down then tools like cuda-memcheck reports errors.
  */
+nrn_pragma_omp(declare target)
 philox4x32_key_t* g_k{};
+nrn_pragma_omp(end declare target)
 
 // In a GPU build we need a device-side global pointer to this global state.
 // This is set to the same unified memory address as `g_k` in

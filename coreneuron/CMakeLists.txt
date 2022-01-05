@@ -47,6 +47,11 @@ list(APPEND CORENEURON_CODE_FILES ${PROJECT_BINARY_DIR}/coreneuron/config/config
 set(DIMPLIC_CODE_FILE "mechanism/mech/dimplic.cpp")
 set(ENGINEMECH_CODE_FILE "mechanism/mech/enginemech.cpp")
 
+file(GLOB CORENEURON_SPECIAL_CORE_FILES "exe/*.cpp")
+list(APPEND CORENEURON_SPECIAL_CORE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/apps/coreneuron.cpp")
+list(APPEND CORENEURON_SPECIAL_CORE_FILES "${DIMPLIC_CODE_FILE}")
+list(APPEND CORENEURON_SPECIAL_CORE_FILES "${ENGINEMECH_CODE_FILE}")
+
 # for external mod files we need to generate modl_ref function in mod_func.c
 set(MODFUNC_PERL_SCRIPT "mechanism/mech/mod_func.c.pl")
 
@@ -183,6 +188,8 @@ if(CORENRN_ENABLE_MPI AND NOT CORENRN_ENABLE_MPI_DYNAMIC)
   set_property(TARGET ${CORENRN_MPI_LIB_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
   set(CORENRN_MPI_OBJ $<TARGET_OBJECTS:${CORENRN_MPI_LIB_NAME}>)
 endif()
+
+set(COMPILE_LIBRARY_TYPE OBJECT)
 
 # main coreneuron library
 add_library(
@@ -357,6 +364,12 @@ configure_file("utils/profile/profiler_interface.h"
 
 # main program required for building special-core
 file(COPY apps/coreneuron.cpp DESTINATION ${CMAKE_BINARY_DIR}/share/coreneuron)
+
+
+add_executable(special-core-gpu ${CORENEURON_SPECIAL_CORE_FILES})
+target_compile_options(special-core-gpu BEFORE PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${CORENRN_ACC_FLAGS}>)
+target_compile_definitions(special-core-gpu PUBLIC -DADDITIONAL_MECHS)
+target_link_libraries(special-core-gpu coreneuron ${CMAKE_DL_LIBS})
 
 # =============================================================================
 # Install main targets

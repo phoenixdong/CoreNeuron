@@ -104,6 +104,17 @@ foreach(COMPILER_LANGUAGE ${SUPPORTED_COMPILER_LANGUAGE_LIST})
     # linked. Symbols needed in shared objects are already linked when building that library.
     set(CMAKE_EXE_LINKER_FLAGS "-Wl,--as-needed")
     set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--as-needed")
+    set(CMAKE_${COMPILER_LANGUAGE}_WARNING_ALL "-Wall")
+    set(CMAKE_${COMPILER_LANGUAGE}_DEBUGINFO_FLAGS "-g")
+
+    set(CMAKE_${COMPILER_LANGUAGE}_OPT_NONE "-O0")
+    set(CMAKE_${COMPILER_LANGUAGE}_OPT_NORMAL "-O1")
+    set(CMAKE_${COMPILER_LANGUAGE}_OPT_AGGRESSIVE "-O3")
+    set(CMAKE_${COMPILER_LANGUAGE}_OPT_FASTEST "-Ofast -march=native")
+
+    set(CMAKE_${COMPILER_LANGUAGE}_STACK_PROTECTION "-fstack-protector")
+    set(CMAKE_${COMPILER_LANGUAGE}_POSITION_INDEPENDENT "-fPIC")
+
 
     # rest of the world
   else()

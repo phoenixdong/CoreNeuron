@@ -150,5 +150,5 @@ fi
 
 # run makefile
 echo "[INFO] Running: make -j$PARALLEL_BUILDS -f ${ROOT_DIR}/share/coreneuron/nrnivmodl_core_makefile ${make_params[@]}"
-make -j$PARALLEL_BUILDS -f "${ROOT_DIR}/share/coreneuron/nrnivmodl_core_makefile" "${make_params[@]}"
+VERBOSE=1 make -j$PARALLEL_BUILDS -f "${ROOT_DIR}/share/coreneuron/nrnivmodl_core_makefile" "${make_params[@]}"
 echo "[INFO] MOD files built successfully for CoreNEURON"
