@@ -29,6 +29,7 @@ jobs:
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: ${{matrix.cores}}
     steps:
+
       - name: Install homebrew packages
         if: startsWith(matrix.os, 'macOS')
         run: |
@@ -47,14 +48,25 @@ jobs:
           echo "CC=gcc" >> $GITHUB_ENV
           echo "CXX=g++" >> $GITHUB_ENV
 
+      - name: Set NEURON branch
+        id: vars
+        env:
+          GITHUB_PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          nrn_branch=`echo "${GITHUB_PR_BODY}" | grep "^CI_BRANCHES" \
+                      | awk -v FS="(NEURON_BRANCH=|,)" '{print $2}'`
+          if [ -z "$nrn_branch" ]; then
+              nrn_branch=master
+          fi
+          echo "Will use neuron branch: $nrn_branch"
+          echo ::set-output name=neuron_branch::"${nrn_branch}"
+
       - uses: actions/checkout@v2
         name: Checkout NEURON
         with:
-          # TODO: allow configuring a non-default branch of NEURON, ideally
-          #       using the same CI_BRANCHES syntax in a PR body that is used
-          #       by the GitLab CI plans.
           path: nrn
           repository: neuronsimulator/nrn
+          ref: ${{ steps.vars.outputs.neuron_branch }}
 
       - name: Update CoreNEURON submodule
         run: |
@@ -67,7 +79,7 @@ jobs:
           echo "Using CoreNEURON SHA ${coreneuron_sha}"
           # https://stackoverflow.com/a/33575837
           git update-index --cacheinfo 160000,${coreneuron_sha},external/coreneuron
-          git submodule update --recursive
+          git submodule update --init external/coreneuron
           echo "NEURON status"
           git status
           git log -n 1
@@ -90,6 +102,7 @@ jobs:
             -DNRN_ENABLE_CORENEURON=ON \
             -DNRN_ENABLE_INTERVIEWS=OFF \
             -DNRN_ENABLE_RX3D=OFF \
+            -DNRN_ENABLE_MPI_DYNAMIC=ON \
             -DNRN_ENABLE_TESTS=ON
 
       - name: Build NEURON
