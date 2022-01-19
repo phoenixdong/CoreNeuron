@@ -82,18 +82,14 @@ build:coreneuron:mod2c:nvhpc:acc:
   extends: [.build, .spack_nvhpc]
   variables:
     SPACK_PACKAGE: coreneuron
-    # +report pulls in a lot of dependencies and the tests fail.
-    # See https://github.com/BlueBrain/CoreNeuron/issues/518 re: build_type
-    SPACK_PACKAGE_SPEC: +gpu+openmp+tests~legacy-unit~report build_type=RelWithDebInfo
+    SPACK_PACKAGE_SPEC: +gpu+openmp+tests~legacy-unit build_type=RelWithDebInfo
 
 # Build CoreNEURON with Unified Memory on GPU
 build:coreneuron:mod2c:nvhpc:acc:unified:
   extends: [.build, .spack_nvhpc]
   variables:
     SPACK_PACKAGE: coreneuron
-    # +report pulls in a lot of dependencies and the tests fail.
-    # See https://github.com/BlueBrain/CoreNeuron/issues/518 re: build_type
-    SPACK_PACKAGE_SPEC: +gpu+unified+openmp+tests~legacy-unit~report build_type=RelWithDebInfo
+    SPACK_PACKAGE_SPEC: +gpu+unified+openmp+tests~legacy-unit build_type=RelWithDebInfo
 
 .build_coreneuron_nmodl:
   extends: [.build]
@@ -113,19 +109,15 @@ build:coreneuron:nmodl:nvhpc:omp:
   extends: [.build_coreneuron_nmodl, .spack_nvhpc]
   variables:
     SPACK_PACKAGE: coreneuron
-    # +report pulls in a lot of dependencies and the tests fail.
-    # See https://github.com/BlueBrain/CoreNeuron/issues/518 re: build_type
-    SPACK_PACKAGE_SPEC: +nmodl+openmp+gpu+tests~legacy-unit~report~sympy build_type=RelWithDebInfo
+    SPACK_PACKAGE_SPEC: +nmodl+openmp+gpu+tests~legacy-unit~sympy build_type=RelWithDebInfo
   needs: ["build:nmodl"]
 
 build:coreneuron:nmodl:nvhpc:acc:
   extends: [.build_coreneuron_nmodl, .spack_nvhpc]
   variables:
     SPACK_PACKAGE: coreneuron
-    # +report pulls in a lot of dependencies and the tests fail.
-    # See https://github.com/BlueBrain/CoreNeuron/issues/518 re: build_type
     # Sympy + OpenMP target offload does not currently work with NVHPC
-    SPACK_PACKAGE_SPEC: +nmodl~openmp+gpu+tests~legacy-unit~report+sympy build_type=RelWithDebInfo
+    SPACK_PACKAGE_SPEC: +nmodl~openmp+gpu+tests~legacy-unit+sympy build_type=RelWithDebInfo
   needs: ["build:nmodl"]
 
 build:coreneuron:mod2c:intel:
