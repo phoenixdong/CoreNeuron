@@ -62,6 +62,7 @@ void set_globals(const char* path, bool cli_global_seed, int cli_global_seed_val
             // will be processed before exit from loop.
             if (val) {
                 N2V::iterator it = n2v->find(name);
+                printf("Passing from NEURON %s %d %g\n", name, size, *val);
                 if (it != n2v->end()) {
                     if (size == 0) {
                         nrn_assert(it->second.first == 0);

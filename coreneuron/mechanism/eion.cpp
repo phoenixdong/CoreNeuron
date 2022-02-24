@@ -109,16 +109,19 @@ void ion_reg(const char* name, double valence) {
         sprintf(buf[1], "%so0_%s", name, buf[0]);
         if (strcmp("na", name) == 0) {
             na_ion = mechtype;
+            printf("Setting global_conci(na) to %lf and global_conco(na) to %lf\n", DEF_nai, DEF_nao);
             global_conci(mechtype) = DEF_nai;
             global_conco(mechtype) = DEF_nao;
             global_charge(mechtype) = 1.;
         } else if (strcmp("k", name) == 0) {
             k_ion = mechtype;
+            printf("Setting global_conci(k) to %lf and global_conco(k) to %lf\n",DEF_ki, DEF_ko);
             global_conci(mechtype) = DEF_ki;
             global_conco(mechtype) = DEF_ko;
             global_charge(mechtype) = 1.;
         } else if (strcmp("ca", name) == 0) {
             ca_ion = mechtype;
+            printf("Setting global_conci(ca) to %lf and global_conco(ca) to %lf\n", DEF_cai, DEF_cao);
             global_conci(mechtype) = DEF_cai;
             global_conco(mechtype) = DEF_cao;
             global_charge(mechtype) = 2.;

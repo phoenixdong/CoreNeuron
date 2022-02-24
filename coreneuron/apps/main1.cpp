@@ -185,13 +185,6 @@ void nrn_init_and_load_data(int argc,
         report_mem_usage("After MPI_Init");
     }
 
-    // initialise default coreneuron parameters
-    initnrn();
-
-    // set global variables
-    // precedence is: set by user, globals.dat, 34.0
-    celsius = corenrn_param.celsius;
-
 #if CORENEURON_ENABLE_GPU
     if (!corenrn_param.gpu && corenrn_param.cell_interleave_permute == 2) {
         fprintf(stderr,
@@ -218,9 +211,6 @@ void nrn_init_and_load_data(int argc,
     // full path of files.dat file
     std::string filesdat(corenrn_param.datpath + "/" + corenrn_param.filesdat);
 
-    // read the global variable names and set their values from globals.dat
-    set_globals(corenrn_param.datpath.c_str(), (corenrn_param.seed >= 0), corenrn_param.seed);
-
     // set global variables for start time, timestep and temperature
     if (!corenrn_embedded) {
         t = checkPoints.restore_time();
@@ -236,6 +226,8 @@ void nrn_init_and_load_data(int argc,
 
     rev_dt = (int) (1. / dt);
 
+    printf("CoreNEURON Global Vars before editing: second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
+
     if (corenrn_param.celsius != -1000.) {  // command line arg highest precedence
         celsius = corenrn_param.celsius;
     } else if (celsius == -1000.) {  // not on command line and no celsius in globals.dat
@@ -246,6 +238,8 @@ void nrn_init_and_load_data(int argc,
 
     // for ispc backend
     ispc_celsius = celsius;
+
+    printf("CoreNEURON Global Vars after editing: second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
 
     // create net_cvode instance
     mk_netcvode();
@@ -514,9 +508,36 @@ extern "C" void mk_mech_init(int argc, char** argv) {
         out.close();
     }
 
-    // reads mechanism information from bbcore_mech.dat
+    // Not working
+    // initialise default coreneuron parameters
+    initnrn();
+    printf("CoreNEURON Global Vars after initnrn(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
 
+    // set global variables
+    // precedence is: set by user, globals.dat, 34.0
+    celsius = corenrn_param.celsius;
+    printf("CoreNEURON Global Vars after corenrn_param: second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
+
+    // read the global variable names and set their values from globals.dat
+    set_globals(corenrn_param.datpath.c_str(), (corenrn_param.seed >= 0), corenrn_param.seed);
+    printf("CoreNEURON Global Vars after set_globals(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
+    
+    // reads mechanism information from bbcore_mech.dat
     mk_mech((corenrn_param.datpath).c_str());
+
+    // // Not working
+    // // initialise default coreneuron parameters
+    // initnrn();
+    // printf("CoreNEURON Global Vars after initnrn(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
+
+    // // set global variables
+    // // precedence is: set by user, globals.dat, 34.0
+    // celsius = corenrn_param.celsius;
+    // printf("CoreNEURON Global Vars after corenrn_param: second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
+
+    // // read the global variable names and set their values from globals.dat
+    // set_globals(corenrn_param.datpath.c_str(), (corenrn_param.seed >= 0), corenrn_param.seed);
+    // printf("CoreNEURON Global Vars after set_globals(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
 }
 
 extern "C" int run_solve_core(int argc, char** argv) {
@@ -526,6 +547,12 @@ extern "C" int run_solve_core(int argc, char** argv) {
     std::vector<std::unique_ptr<ReportHandler>> report_handlers;
     std::vector<std::pair<std::string, int>> spikes_population_name_offset;
     bool reports_needs_finalize = false;
+
+
+    // read the global variable names and set their values from globals.dat
+    set_globals(corenrn_param.datpath.c_str(), (corenrn_param.seed >= 0), corenrn_param.seed);
+    printf("CoreNEURON Global Vars after set_globals(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
+
 
     if (!corenrn_param.is_quiet()) {
         report_mem_usage("After mk_mech");
