@@ -515,10 +515,9 @@ extern "C" void mk_mech_init(int argc, char** argv) {
     // some global variables need to be read before the ion_reg to initialize
     // properly the in-built ion mechanisms
     set_globals(corenrn_param.datpath.c_str(), (corenrn_param.seed >= 0), corenrn_param.seed);
-    
+
     // reads mechanism information from bbcore_mech.dat
     mk_mech((corenrn_param.datpath).c_str());
-
 }
 
 extern "C" int run_solve_core(int argc, char** argv) {
