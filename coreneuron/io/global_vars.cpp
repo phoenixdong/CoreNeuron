@@ -77,6 +77,9 @@ void set_globals(const char* path, bool cli_global_seed, int cli_global_seed_val
                         }
                     }
                 }
+                if (static_cast<std::string>(name).find("ion") != std::string::npos) {
+                    nrn_ion_init[name] = *val;
+                }
                 delete[] val;
                 val = nullptr;
             }
@@ -116,7 +119,8 @@ void set_globals(const char* path, bool cli_global_seed, int cli_global_seed_val
                 if (it != n2v->end()) {
                     nrn_assert(it->second.first == 0);
                     *(it->second.second) = val;
-                } else if (static_cast<std::string>(name).find("ion") != std::string::npos) {
+                }
+                if (static_cast<std::string>(name).find("ion") != std::string::npos) {
                     nrn_ion_init[name] = val;
                 }
             } else if (sscanf(line, "%[^[][%d]\n", name, &n) == 2) {

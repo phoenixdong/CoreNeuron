@@ -508,36 +508,21 @@ extern "C" void mk_mech_init(int argc, char** argv) {
         out.close();
     }
 
-    // Not working
     // initialise default coreneuron parameters
     initnrn();
-    printf("CoreNEURON Global Vars after initnrn(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
 
     // set global variables
     // precedence is: set by user, globals.dat, 34.0
     celsius = corenrn_param.celsius;
-    printf("CoreNEURON Global Vars after corenrn_param: second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
 
     // read the global variable names and set their values from globals.dat
+    // some global variables need to be read before the ion_reg to initialize
+    // properly the in-built ion mechanisms
     set_globals(corenrn_param.datpath.c_str(), (corenrn_param.seed >= 0), corenrn_param.seed);
-    printf("CoreNEURON Global Vars after set_globals(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
     
     // reads mechanism information from bbcore_mech.dat
     mk_mech((corenrn_param.datpath).c_str());
 
-    // // Not working
-    // // initialise default coreneuron parameters
-    // initnrn();
-    // printf("CoreNEURON Global Vars after initnrn(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
-
-    // // set global variables
-    // // precedence is: set by user, globals.dat, 34.0
-    // celsius = corenrn_param.celsius;
-    // printf("CoreNEURON Global Vars after corenrn_param: second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
-
-    // // read the global variable names and set their values from globals.dat
-    // set_globals(corenrn_param.datpath.c_str(), (corenrn_param.seed >= 0), corenrn_param.seed);
-    // printf("CoreNEURON Global Vars after set_globals(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
 }
 
 extern "C" int run_solve_core(int argc, char** argv) {
@@ -549,10 +534,9 @@ extern "C" int run_solve_core(int argc, char** argv) {
     bool reports_needs_finalize = false;
 
 
-    // read the global variable names and set their values from globals.dat
+    // read agin the global variables to set the global variables defined by
+    // the mod files' mechanisms
     set_globals(corenrn_param.datpath.c_str(), (corenrn_param.seed >= 0), corenrn_param.seed);
-    printf("CoreNEURON Global Vars after set_globals(): second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
-
 
     if (!corenrn_param.is_quiet()) {
         report_mem_usage("After mk_mech");
