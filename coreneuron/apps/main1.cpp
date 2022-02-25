@@ -226,8 +226,6 @@ void nrn_init_and_load_data(int argc,
 
     rev_dt = (int) (1. / dt);
 
-    printf("CoreNEURON Global Vars before editing: second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
-
     if (corenrn_param.celsius != -1000.) {  // command line arg highest precedence
         celsius = corenrn_param.celsius;
     } else if (celsius == -1000.) {  // not on command line and no celsius in globals.dat
@@ -238,8 +236,6 @@ void nrn_init_and_load_data(int argc,
 
     // for ispc backend
     ispc_celsius = celsius;
-
-    printf("CoreNEURON Global Vars after editing: second order=%d t=%g dt=%g rev_dt=%d celsius=%lf\n", secondorder, t, dt, rev_dt, celsius);
 
     // create net_cvode instance
     mk_netcvode();
