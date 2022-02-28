@@ -48,6 +48,7 @@ extern double t, dt;
 extern int rev_dt;
 extern bool stoprun;
 extern const char* bbcore_write_version;
+extern bool corenrn_skip_initmodel;
 #define tstopbit   (1 << 15)
 #define tstopset   stoprun |= tstopbit
 #define tstopunset stoprun &= (~tstopbit)

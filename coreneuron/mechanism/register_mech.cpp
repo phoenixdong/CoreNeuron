@@ -23,6 +23,7 @@ nrn_pragma_omp(declare target)
 double t, dt, celsius, pi;
 nrn_pragma_omp(end declare target)
 int rev_dt;
+bool corenrn_skip_initmodel = false;
 
 using Pfrv = void (*)();
 
@@ -108,6 +109,7 @@ void initnrn() {
     dt = DEF_dt;                   /* msec */
     rev_dt = (int) (DEF_rev_dt);   /* 1/msec */
     celsius = DEF_celsius;         /* degrees celsius */
+    corenrn_skip_initmodel = false;
 }
 
 /* if vectorized then thread_data_size added to it */

@@ -16,14 +16,15 @@
 
 namespace coreneuron {
 
+extern bool corenrn_skip_initmodel;
 bool _nrn_skip_initmodel;
 
-void allocate_data_in_mechanism_nrn_init() {
+void mechanism_nrn_init(bool skip_init_model) {
     // In case some nrn_init allocates data that we need. In this case
     // we want to call nrn_init but not execute initmodel i.e. INITIAL
     // block. For this, set _nrn_skip_initmodel to True temporarily
     // , execute nrn_init and return.
-    _nrn_skip_initmodel = true;
+    _nrn_skip_initmodel = skip_init_model;
     for (int i = 0; i < nrn_nthread; ++i) {  // could be parallel
         NrnThread& nt = nrn_threads[i];
         for (NrnThreadMembList* tml = nt.tml; tml; tml = tml->next) {
@@ -78,15 +79,7 @@ void nrn_finitialize(int setv, double v) {
        concentrations.
     */
     /* the memblist list in NrnThread is already so ordered */
-    for (int i = 0; i < nrn_nthread; ++i) {
-        NrnThread* nt = nrn_threads + i;
-        for (auto tml = nt->tml; tml; tml = tml->next) {
-            mod_f_t s = corenrn.get_memb_func(tml->index).initialize;
-            if (s) {
-                (*s)(nt, tml->ml, tml->index);
-            }
-        }
-    }
+    mechanism_nrn_init(corenrn_skip_initmodel);
 #endif
 
     init_net_events();
@@ -96,10 +89,12 @@ void nrn_finitialize(int setv, double v) {
     for (int i = 0; i < nrn_nthread; ++i) {
         nrn_deliver_events(nrn_threads + i); /* The INITIAL sent events at t=0 */
     }
-    for (int i = 0; i < nrn_nthread; ++i) {
-        setup_tree_matrix_minimal(nrn_threads + i);
-        if (nrn_use_fast_imem) {
-            nrn_calc_fast_imem_init(nrn_threads + i);
+    if (!corenrn_skip_initmodel) {
+        for (int i = 0; i < nrn_nthread; ++i) {
+            setup_tree_matrix_minimal(nrn_threads + i);
+            if (nrn_use_fast_imem) {
+                nrn_calc_fast_imem_init(nrn_threads + i);
+            }
         }
     }
     for (int i = 0; i < nrn_nthread; ++i) {

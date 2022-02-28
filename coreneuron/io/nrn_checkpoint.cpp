@@ -531,7 +531,7 @@ bool CheckPoints::initialize() {
     nrn_thread_table_check();
     nrn_spike_exchange_init();
 
-    allocate_data_in_mechanism_nrn_init();
+    mechanism_nrn_init(true);
 
     // if PatternStim exists, needs initialization
     for (NrnThreadMembList* tml = nrn_threads[0].tml; tml; tml = tml->next) {

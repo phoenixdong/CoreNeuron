@@ -64,6 +64,8 @@ struct corenrn_parameters_data {
 
     bool model_stats = false;  /// Print mechanism counts and model size after initialization
 
+    bool skip_finitialize = false;  /// Skip initialization of the mechanisms (nrn_init functions and values' updates)
+
     verbose_level verbose{verbose_level::DEFAULT};  /// Verbosity-level
 
     double tstop = 100;        /// Stop time of simulation in msec

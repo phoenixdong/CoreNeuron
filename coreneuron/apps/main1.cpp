@@ -237,6 +237,12 @@ void nrn_init_and_load_data(int argc,
     // for ispc backend
     ispc_celsius = celsius;
 
+    // Set whether the mechanisms should call their nrn_init functions
+    // Skip model initialization only if user explicitly asks for it otherwise use NEURON global
+    // variable to decide
+    corenrn_skip_initmodel = corenrn_param.skip_finitialize || (corenrn_skip_initmodel && !corenrn_param.skip_finitialize);
+    corenrn_param.skip_finitialize = corenrn_skip_initmodel || corenrn_embedded;
+
     // create net_cvode instance
     mk_netcvode();
 
@@ -338,7 +344,7 @@ void nrn_init_and_load_data(int argc,
     if (corenrn_embedded) {
         // Run nrn_init of mechanisms only to allocate any extra data needed on the GPU after
         // nrnthreads are properly set up on the GPU
-        allocate_data_in_mechanism_nrn_init();
+        mechanism_nrn_init(true);
     }
 
     if (corenrn_param.gpu) {
@@ -527,7 +533,6 @@ extern "C" int run_solve_core(int argc, char** argv) {
     std::vector<std::unique_ptr<ReportHandler>> report_handlers;
     std::vector<std::pair<std::string, int>> spikes_population_name_offset;
     bool reports_needs_finalize = false;
-
 
     // read agin the global variables to set the global variables defined by
     // the mod files' mechanisms

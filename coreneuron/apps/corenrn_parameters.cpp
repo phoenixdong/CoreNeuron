@@ -45,7 +45,11 @@ corenrn_parameters::corenrn_parameters() {
     app.add_flag("--model-stats",
                  this->model_stats,
                  "Print number of instances of each mechanism and detailed memory stats.");
-
+    app.add_flag(
+        "--skip-finitialize",
+        this->skip_finitialize,
+        "Call nrn_init function for the mechanisms only to allocate any data needed and not to "
+        "update any values.");
     auto sub_gpu = app.add_option_group("GPU", "Commands relative to GPU.");
     sub_gpu
         ->add_option("-W, --nwarp",
@@ -205,6 +209,7 @@ std::ostream& operator<<(std::ostream& os, const corenrn_parameters& corenrn_par
        << "--gpu=" << (corenrn_param.gpu ? "true" : "false") << std::endl
        << "--dt=" << corenrn_param.dt << std::endl
        << "--tstop=" << corenrn_param.tstop << std::endl
+       << "--skip-finitialize=" << (corenrn_param.skip_finitialize ? "true" : "false") << std::endl
        << std::endl
        << "GPU" << std::endl
        << "--nwarp=" << corenrn_param.nwarp << std::endl

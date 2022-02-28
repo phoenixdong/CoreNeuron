@@ -150,6 +150,8 @@ void set_globals(const char* path, bool cli_global_seed, int cli_global_seed_val
                     secondorder = n;
                 } else if (strcmp(name, "Random123_globalindex") == 0) {
                     nrnran123_set_globalindex((uint32_t) n);
+                } else if (strcmp(name, "_nrn_initialized_") == 0) {
+                    corenrn_skip_initmodel = n;
                 } else if (strcmp(name, "_nrnunit_use_legacy_") == 0) {
                     if (n != CORENRN_USE_LEGACY_UNITS) {
                         hoc_execerror(
