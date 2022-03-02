@@ -36,6 +36,7 @@ simulation_stack:
   needs: [spack_setup]
   trigger:
     project: hpc/sim/blueconfigs
+    branch: fix/no_bluepy_run
     # CoreNEURON CI status depends on the BlueConfigs CI status.
     strategy: depend
   variables:
