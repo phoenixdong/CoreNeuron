@@ -1,0 +1,28 @@
+var nrnran123_8h =
+[
+    [ "nrnran123_State", "structcoreneuron_1_1nrnran123___state.html", "structcoreneuron_1_1nrnran123___state" ],
+    [ "nrnran123_array4x32", "structcoreneuron_1_1nrnran123__array4x32.html", "structcoreneuron_1_1nrnran123__array4x32" ],
+    [ "CORENRN_HOST_DEVICE", "nrnran123_8h.html#a13198697a57915e037418ffad48a5a14", null ],
+    [ "CORENRN_HOST_DEVICE_ACC", "nrnran123_8h.html#a6daaa2715be00ef2da09c4e73a1b0da0", null ],
+    [ "CORENRN_RAN123_USE_UNIFIED_MEMORY", "nrnran123_8h.html#a5ec40bb47734eab23c782c8a5dea73ae", null ],
+    [ "nrn_pragma_omp", "nrnran123_8h.html#a8446ee628d06007bf93b03a1314d61a8", null ],
+    [ "nrnran123_dblpick", "nrnran123_8h.html#a4e8649af6f5b10ac3913afd77ada31ee", null ],
+    [ "nrnran123_deletestream", "nrnran123_8h.html#a7e336cbb35ec72c31916b014965f8c87", null ],
+    [ "nrnran123_gauss", "nrnran123_8h.html#a18c89a3492ca6659ce1880306b37ddff", null ],
+    [ "nrnran123_get_globalindex", "nrnran123_8h.html#ae7ea8134647245cdfce5e3adc60e7870", null ],
+    [ "nrnran123_getids", "nrnran123_8h.html#aaaa0ea9df6260a04462debe2c389b77f", null ],
+    [ "nrnran123_getids3", "nrnran123_8h.html#adea9be52c4a4ce12775c3ffb020dfde4", null ],
+    [ "nrnran123_instance_count", "nrnran123_8h.html#abfadca2cfb22102a36d47bdeb3793c68", null ],
+    [ "nrnran123_ipick", "nrnran123_8h.html#a02885d9d96d9feda26fa5c19f8002f23", null ],
+    [ "nrnran123_iran", "nrnran123_8h.html#ab35e64e269e5759181ad89afbeffe69e", null ],
+    [ "nrnran123_negexp", "nrnran123_8h.html#a9ec93412dbe77eb5cba61125616979f6", null ],
+    [ "nrnran123_newstream", "nrnran123_8h.html#afaad8706e9e6edec9199dbe6f9414486", null ],
+    [ "nrnran123_newstream3", "nrnran123_8h.html#a7e06c840e15b17805ecd3b0f807bd70f", null ],
+    [ "nrnran123_normal", "nrnran123_8h.html#a2e497c6143385de0def165349b47add3", null ],
+    [ "nrnran123_set_globalindex", "nrnran123_8h.html#a1cf47265fd83aed79b88f53706d66f77", null ],
+    [ "nrnran123_setseq", "nrnran123_8h.html#ae856c317b2ed5d84b571c35f31f4c0fe", null ],
+    [ "nrnran123_state_size", "nrnran123_8h.html#a4e0145894f8204df4f5cfcb51a882703", null ],
+    [ "nrnran123_uint2dbl", "nrnran123_8h.html#abd3f407bc93c0661544a2f138dd42afb", null ],
+    [ "seq", "nrnran123_8h.html#aecf7e62f88695d79a943e1aa63f87e66", null ],
+    [ "which", "nrnran123_8h.html#a6441aa3c7ed0ee7394021a47f2338ade", null ]
+];
