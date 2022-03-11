@@ -45,6 +45,7 @@
 #include "coreneuron/io/nrn2core_direct.h"
 #include "coreneuron/io/core2nrn_data_return.hpp"
 #include "coreneuron/utils/utils.hpp"
+#include "coreneuron/cudadeliver/setup.h"//dong
 
 extern "C" {
 const char* corenrn_version() {
@@ -563,6 +564,9 @@ extern "C" int run_solve_core(int argc, char** argv) {
     }
 #endif
     bool compute_gpu = corenrn_param.gpu;
+#ifdef CUDA_DELIVER//dong
+    CudaDeliverSetup(nrn_threads);//
+#endif//
 
     nrn_pragma_acc(update device(celsius, secondorder, pi) if (compute_gpu))
     nrn_pragma_omp(target update to(celsius, secondorder, pi) if (compute_gpu))
@@ -622,6 +626,7 @@ extern "C" int run_solve_core(int argc, char** argv) {
             Instrumentor::phase p("handle-forward-skip");
             handle_forward_skip(corenrn_param.forwardskip, corenrn_param.prcellgid);
         }
+
 
         /// Solver execution
         Instrumentor::start_profile();
@@ -702,6 +707,9 @@ extern "C" int run_solve_core(int argc, char** argv) {
 #endif
 
     Instrumentor::phase_end("main");
-
+//dong
+#ifdef CUDA_DELIVER
+    CudaDeliverCleanup();//dong
+#endif
     return 0;
 }
