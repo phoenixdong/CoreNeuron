@@ -23,6 +23,7 @@
 #include "coreneuron/utils/nrnoc_aux.hpp"
 #include "coreneuron/mpi/nrnmpidec.h"
 #include "coreneuron/utils/utils.hpp"
+#include "coreneuron/cudadeliver/log.h"//dong
 
 #ifdef CRAYPAT
 #include <pat_api.h>
@@ -611,6 +612,7 @@ void delete_ivoc_vect_from_device(IvocVect& vec) {
 }
 
 void realloc_net_receive_buffer(NrnThread* nt, Memb_list* ml) {
+    Instrumentor::phase p = Instrumentor::phase("realloc_net_receive_buffer");//dong
     NetReceiveBuffer_t* nrb = ml->_net_receive_buffer;
     if (!nrb) {
         return;
@@ -712,6 +714,41 @@ static void net_receive_buffer_order(NetReceiveBuffer_t* nrb) {
     nrb->_displ_cnt = displ_cnt;
 }
 
+//dong>
+static void net_receive_buffer_order_refactor(NetReceiveBuffer_t* nrb) {
+    if (nrb->_cnt == 0) {
+        nrb->_displ_cnt = 0;
+        return;
+    }
+
+    std::vector<uint64_t> nrbv(nrb->_cnt);
+    for (int i = 0; i < nrbv.size(); ++i) {
+        assert(nrb->_pnt_index[i] >= 0);
+        const uint64_t id = ((uint64_t)(nrb->_pnt_index[i]) << 32) | i;
+        nrbv[i] = id;
+    }
+    TRACE("nrbv size = %d", nrbv.size());
+    std::sort(nrbv.begin(), nrbv.end());
+
+    int displ_cnt = 0;
+    int index_cnt = 0;
+    int last_instance_index = -1;
+    nrb->_displ[0] = 0;
+
+    for (const auto id : nrbv) {
+        const int pnt_index = (id >> 32);
+        const int i = (id & 0xffff);
+        nrb->_nrb_index[index_cnt++] = i;
+        if (pnt_index != last_instance_index) {
+            ++displ_cnt;
+        }
+        nrb->_displ[displ_cnt] = index_cnt;
+        last_instance_index = pnt_index;
+    }
+    nrb->_displ_cnt = displ_cnt;
+}
+//dong<
+
 /* when we execute NET_RECEIVE block on GPU, we provide the index of synapse instances
  * which we need to execute during the current timestep. In order to do this, we have
  * update NetReceiveBuffer_t object to GPU. When size of cpu buffer changes, we set
@@ -722,7 +759,7 @@ static void net_receive_buffer_order(NetReceiveBuffer_t* nrb) {
  * functional version.
  */
 void update_net_receive_buffer(NrnThread* nt) {
-    Instrumentor::phase p_update_net_receive_buffer("update-net-receive-buf");
+    Instrumentor::phase p_update_net_receive_buffer("update-net-receive-buf");//dong
     for (auto tml = nt->tml; tml; tml = tml->next) {
         int is_art = corenrn.get_is_artificial()[tml->index];
         if (is_art) {
@@ -734,7 +771,11 @@ void update_net_receive_buffer(NrnThread* nt) {
         // if net receive buffer exist for mechanism
         if (nrb && nrb->_cnt) {
             // instance order to avoid race. setup _displ and _nrb_index
-            net_receive_buffer_order(nrb);
+            // net_receive_buffer_order(nrb); //dong
+            {
+            	Instrumentor::phase p1 = Instrumentor::phase("net_receive_buffer_order_refactor");//dong
+            	net_receive_buffer_order_refactor(nrb);//dong
+            }
 
             if (nt->compute_gpu) {
                 Instrumentor::phase p_net_receive_buffer_order("net-receive-buf-cpu2gpu");
