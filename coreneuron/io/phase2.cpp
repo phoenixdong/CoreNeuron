@@ -657,7 +657,7 @@ void Phase2::pdata_relocation(const NrnThread& nt, const std::vector<Memb_func>&
                          **/
                         break;
                     default:
-                        if (s >= 0 && s < 1000) {  // ion
+                        if (s >= 0 && s < 100) {  // ion //dong
                             int etype = s;
                             /* if ion is SoA, must recalculate pdata values */
                             /* if ion is AoS, have to deal with offset */
@@ -1230,8 +1230,8 @@ void Phase2::populate(NrnThread& nt, const UserParams& userParams) {
         }
         if (ix < 0) {
             ix = -ix;
-            int index = ix / 1000;
-            int type = ix % 1000;
+            int index = ix / 100;//dong
+            int type = ix % 100;//dong
             Point_process* pnt = nt.pntprocs + (pnt_offset[type] + index);
             ps->pntsrc_ = pnt;
             // pnt->_presyn = ps;
