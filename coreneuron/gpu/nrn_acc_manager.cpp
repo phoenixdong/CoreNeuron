@@ -714,7 +714,7 @@ static void net_receive_buffer_order(NetReceiveBuffer_t* nrb) {
     nrb->_displ_cnt = displ_cnt;
 }
 
-//dong>
+//dong> 
 static void net_receive_buffer_order_refactor(NetReceiveBuffer_t* nrb) {
     if (nrb->_cnt == 0) {
         nrb->_displ_cnt = 0;
