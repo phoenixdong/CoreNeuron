@@ -45,6 +45,12 @@ namespace coreneuron {
 std::vector<double> spikevec_time;
 std::vector<int> spikevec_gid;
 
+//dong
+#ifdef ANALYSE
+std::vector<int> spikevec_presyn_nccnts;
+std::vector<int> spikevec_inputpresyn_nccnts;
+#endif
+
 static OMP_Mutex mut;
 
 void mk_spikevec_buffer(int sz) {
