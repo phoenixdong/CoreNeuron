@@ -104,9 +104,15 @@ extern "C" int nrnmpi_multisend_single_advance_impl(NRNMPI_Spike* spk, MPI_Comm*
 extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_single_advance_impl)>
     nrnmpi_multisend_single_advance;
 
+//dong
 extern "C" int nrnmpi_multisend_conserve_impl(int nsend, int nrecv);
 extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_conserve_impl)>
     nrnmpi_multisend_conserve;
+
+extern "C" int nrnmpi_multisend_conserve_impl(int nsend, int nrecvi, MPI_Comm* pcomm);
+extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_conserve_impl)>
+    nrnmpi_multisend_conserve;
+
 #endif
 
 }  // namespace coreneuron
