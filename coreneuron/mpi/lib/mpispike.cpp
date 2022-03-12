@@ -342,19 +342,53 @@ void nrnmpi_multisend_comm_impl() {
 }
 
 void nrnmpi_multisend_impl(NRNMPI_Spike* spk, int n, int* hosts) {
+  //dong
+  {
+    Instrumentor::phase p("nrnmpi_multisend");
     MPI_Request r;
     for (int i = 0; i < n; ++i) {
         MPI_Isend(spk, 1, spike_type, hosts[i], 1, multisend_comm, &r);
         MPI_Request_free(&r);
     }
+  }
+}
+
+//dong
+void nrnmpi_multisend_impl(NRNMPI_Spike* spk, int n, int* hosts, MPI_Comm* pcomm) {
+    {
+    Instrumentor::phase p("nrnmpi_multisend");
+    MPI_Request r;
+    for (int i = 0; i < n; ++i) {
+        MPI_Isend(spk, 1, spike_type, hosts[i], 1, *pcomm, &r);
+        MPI_Request_free(&r);
+    }
+    }
 }
 
 int nrnmpi_multisend_single_advance_impl(NRNMPI_Spike* spk) {
     int flag = 0;
+  //dong
+  {
+    Instrumentor::phase p("nrnmpi_multisend_advance");
     MPI_Status status;
     MPI_Iprobe(MPI_ANY_SOURCE, 1, multisend_comm, &flag, &status);
     if (flag) {
         MPI_Recv(spk, 1, spike_type, MPI_ANY_SOURCE, 1, multisend_comm, &status);
+    }
+  }
+    return flag;
+}
+
+//dong
+int nrnmpi_multisend_single_advance_impl(NRNMPI_Spike* spk, MPI_Comm* pcomm) {
+    int flag = 0;
+    {
+    Instrumentor::phase p("nrnmpi_multisend_advance");
+    MPI_Status status;
+    MPI_Iprobe(MPI_ANY_SOURCE, 1, *pcomm, &flag, &status);
+    if (flag) {
+        MPI_Recv(spk, 1, spike_type, MPI_ANY_SOURCE, 1, *pcomm, &status);
+    }
     }
     return flag;
 }
@@ -363,6 +397,14 @@ int nrnmpi_multisend_conserve_impl(int nsend, int nrecv) {
     int tcnts[2];
     tcnts[0] = nsend - nrecv;
     MPI_Allreduce(tcnts, tcnts + 1, 1, MPI_INT, MPI_SUM, multisend_comm);
+    return tcnts[1];
+}
+
+//dong
+int nrnmpi_multisend_conserve_impl(int nsend, int nrecv, MPI_Comm* pcomm) {
+    int tcnts[2];
+    tcnts[0] = nsend - nrecv;
+    MPI_Allreduce(tcnts, tcnts + 1, 1, MPI_INT, MPI_SUM, *pcomm);
     return tcnts[1];
 }
 
