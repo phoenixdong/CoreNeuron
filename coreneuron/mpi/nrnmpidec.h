@@ -90,9 +90,20 @@ extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_comm_impl)>
     nrnmpi_multisend_comm;
 extern "C" void nrnmpi_multisend_impl(NRNMPI_Spike* spk, int n, int* hosts);
 extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_impl)> nrnmpi_multisend;
+
+//dong
+extern "C" void nrnmpi_multisend_impl(NRNMPI_Spike* spk, int n, int* hosts, MPI_Comm* pcomm);
+extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_impl)> nrnmpi_multisend;
+
+//dong
 extern "C" int nrnmpi_multisend_single_advance_impl(NRNMPI_Spike* spk);
 extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_single_advance_impl)>
     nrnmpi_multisend_single_advance;
+
+extern "C" int nrnmpi_multisend_single_advance_impl(NRNMPI_Spike* spk, MPI_Comm* pcomm);
+extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_single_advance_impl)>
+    nrnmpi_multisend_single_advance;
+
 extern "C" int nrnmpi_multisend_conserve_impl(int nsend, int nrecv);
 extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_conserve_impl)>
     nrnmpi_multisend_conserve;
