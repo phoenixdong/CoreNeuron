@@ -16,32 +16,61 @@
 
 #include "coreneuron/gpu/nrn_acc_manager.hpp"
 
+//dong
+#include "coreneuron/utils/profile/profiler_interface.h"
+#include "coreneuron/cudadeliver/cudadeliver.h"
+
 namespace coreneuron {
 
 // for fixed step thread
 // check thresholds and deliver all (including binqueue) events
 // up to t+dt/2
 void deliver_net_events(NrnThread* nt) {
+//dong
+    Instrumentor::phase p("deliver_net_events");
+
     if (net_cvode_instance) {
+//dong
+#ifdef CUDA_DELIVER
+        net_cvode_instance->cuda_deliver_events(nt);
+#else    
         net_cvode_instance->check_thresh(nt);
         net_cvode_instance->deliver_net_events(nt);
-    }
+#endif
+  }
 }
 
 // deliver events (but not binqueue)  up to nt->_t
 void nrn_deliver_events(NrnThread* nt) {
+//dong
+    Instrumentor::phase p("nrn_deliver_events");
     double tsav = nt->_t;
+//dong
+#ifdef CUDA_DELIVER
+    CudaFire(nt);
+#endif
+  {
+    Instrumentor::phase p("cvode_instance_deliver_events");
     if (net_cvode_instance) {
         net_cvode_instance->deliver_events(tsav, nt);
     }
+  }
     nt->_t = tsav;
 
+//dong  
+  {
+    Instrumentor::phase p("transfer_netbuf_host2device");
     /*before executing on gpu, we have to update the NetReceiveBuffer_t on GPU */
     update_net_receive_buffer(nt);
+  }
 
+//dong
+  {
+    Instrumentor::phase p("netbuf_receive_device");
     for (auto& net_buf_receive: corenrn.get_net_buf_receive()) {
         (*net_buf_receive.first)(nt);
     }
+  }
 }
 
 void clear_event_queue() {
