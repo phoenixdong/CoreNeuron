@@ -11,6 +11,9 @@
 #include "coreneuron/sim/multicore.hpp"
 #include "coreneuron/network/netcon.hpp"
 #include "coreneuron/network/netcvode.hpp"
+//dong
+#include "coreneuron/utils/profile/profiler_interface.h"
+#include "coreneuron/cudadeliver/log.h"
 
 /*
 Overall exchange strategy
@@ -119,7 +122,9 @@ static int current_rbuf, next_rbuf;
 // then during transmission its gid is complemented.
 #endif
 
-static int* targets_phase1_;
+//dong
+//static int* targets_phase1_;
+int* targets_phase1_;
 static int* targets_phase2_;
 
 void nrn_multisend_send(PreSyn* ps, double t, NrnThread* nt) {
@@ -140,6 +145,8 @@ void nrn_multisend_send(PreSyn* ps, double t, NrnThread* nt) {
         if (nt == nrn_threads) {
             multisend_receive_buffer[next_rbuf]->nsend_ += cnt;
             multisend_receive_buffer[next_rbuf]->nsend_cell_ += 1;
+            //dong
+            TRACE("send spike (%d,%lf)", spk.gid, spk.spiketime);
             nrnmpi_multisend(&spk, cnt_phase1, ranks);
         } else {
             assert(0);
@@ -348,6 +355,8 @@ static int multisend_advance() {
             j = 1;
         }
 #endif
+//dong
+        TRACE("receive spike (%d,%lf)", spk.gid, spk.spiketime);
         multisend_receive_buffer[j]->incoming(spk.gid, spk.spiketime);
     }
     return i;
@@ -365,6 +374,8 @@ void nrn_multisend_advance() {
 #endif
 
 void nrn_multisend_receive(NrnThread* nt) {
+//dong
+    Instrumentor::phase p("nrn_multisend_receive");
     //	nrn_spike_exchange();
     assert(nt == nrn_threads);
     //	double w1, w2;
