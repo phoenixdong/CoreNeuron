@@ -13,6 +13,8 @@ namespace coreneuron {
 extern bool use_multisend_;
 extern int n_multisend_interval;
 extern bool use_phase2_;
+//dong
+extern int* targets_phase1_;
 
 class PreSyn;
 class NrnThread;
