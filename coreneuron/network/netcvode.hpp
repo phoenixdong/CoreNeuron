@@ -80,5 +80,7 @@ class NetCvode {
     void clear_events();
     void init_events();
     void point_receive(int, Point_process*, double*, double);
+    //dong
+    void cuda_deliver_events(NrnThread*);
 };
 }  // namespace coreneuron
