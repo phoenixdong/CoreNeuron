@@ -23,6 +23,8 @@
 #include "coreneuron/utils/progressbar/progressbar.hpp"
 #include "coreneuron/utils/profile/profiler_interface.h"
 #include "coreneuron/io/nrn2core_direct.h"
+//dong
+#include "coreneuron/cudadeliver/cudadeliver.h"
 
 namespace coreneuron {
 static void* nrn_fixed_step_thread(NrnThread*);
@@ -337,6 +339,10 @@ static void* nrn_fixed_step_thread(NrnThread* nth) {
     }
 
     nth->_t += .5 * nth->_dt;
+//dong
+#ifdef CUDA_DELIVER
+        CudaIncHalfTimeStep(nth);
+#endif
 
     if (nth->ncell) {
         /*@todo: do we need to update nth->_t on GPU: Yes (Michael, but can
@@ -374,6 +380,10 @@ static void* nrn_fixed_step_thread(NrnThread* nth) {
 
 void* nrn_fixed_step_lastpart(NrnThread* nth) {
     nth->_t += .5 * nth->_dt;
+//dong
+#ifdef CUDA_DELIVER
+    CudaIncHalfTimeStep(nth);
+#endif
 
     if (nth->ncell) {
         /*@todo: do we need to update nth->_t on GPU */
