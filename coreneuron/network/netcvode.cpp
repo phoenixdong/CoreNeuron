@@ -26,6 +26,9 @@
 #include "coreneuron/coreneuron.hpp"
 #include "coreneuron/utils/nrnoc_aux.hpp"
 
+//dong
+#include "coreneuron/cudadeliver/cudadeliver.h"
+
 namespace coreneuron {
 #define PP2NT(pp) (nrn_threads + (pp)->_tid)
 #define PP2t(pp)  (PP2NT(pp)->_t)
@@ -686,4 +689,185 @@ tryagain:
         (*net_buf_receive.first)(nt);
     }
 }
+
+void NetCvode::cuda_deliver_events(NrnThread* nt) {
+    int i;
+    double teps = 1e-10;
+
+    nt->_net_send_buffer_cnt = 0;
+    int net_send_buf_count = 0;
+    PreSyn* presyns = nt->presyns;
+    PreSynHelper* presyns_helper = nt->presyns_helper;
+    double* actual_v = nt->_actual_v;
+
+//dong
+//#if defined(_OPENACC)
+#ifdef CORENEURON_ENABLE_GPU
+    int stream_id = nt->stream_id;
+#endif
+
+    if (nt->ncell == 0)
+        return;
+
+    {
+    Instrumentor::phase p("get_watch_host");
+    // Types that have WATCH statements. If exist, then last element is 0.
+    if (nt->_watch_types) {
+        for (int i = 0; nt->_watch_types[i] != 0; ++i) {
+            int type = nt->_watch_types[i];
+            (*corenrn.get_watch_check()[type])(nt, nt->_ml_list[type]);
+            // may generate net_send events (with 0 (teps) delay)
+        }
+    }
+    }
+
+    {
+    Instrumentor::phase p("collect_spike_device");
+//_net_send_buffer_cnt is no longer used in openacc kernel, remove this?
+//#ifdef _OPENACC
+//    if(nt->compute_gpu)
+//        acc_update_device(&(nt->_net_send_buffer_cnt), sizeof(int));
+//#endif
+
+// on GPU...
+// clang-format off
+//dong
+    // #pragma acc parallel loop present(                  \
+    //     nt[0:1], presyns_helper[0:nt->n_presyn],        \
+    //     presyns[0:nt->n_presyn], actual_v[0:nt->end])   \
+    //     copy(net_send_buf_count) if (nt->compute_gpu)   \
+    //     async(stream_id)
+    nrn_pragma_acc(parallel loop present(
+        nt[0:1], presyns_helper [0:nt->n_presyn], presyns [0:nt->n_presyn], actual_v [0:nt->end])
+                       copy(net_send_buf_count) if (nt->compute_gpu) async(nt->stream_id))
+    // clang-format on
+
+    for (i = 0; i < nt->ncell; ++i) {
+        PreSyn* ps = presyns + i;
+        PreSynHelper* psh = presyns_helper + i;
+        int idx = 0;
+        int thidx = ps->thvar_index_;
+        double v = actual_v[thidx];
+        double threshold = ps->threshold_;
+        int* flag = &(psh->flag_);
+
+        if (pscheck(v, threshold, flag)) {
+//dong
+//#ifndef _OPENACC
+#ifndef CORENEURON_ENABLE_GPU
+            nt->_net_send_buffer_cnt = net_send_buf_count;
+            if (nt->_net_send_buffer_cnt >= nt->_net_send_buffer_size) {
+                nt->_net_send_buffer_size *= 2;
+                nt->_net_send_buffer =
+                    (int*)erealloc(nt->_net_send_buffer, nt->_net_send_buffer_size * sizeof(int));
+            }
+#endif
+
+// clang-format off
+            //#pragma acc atomic capture
+            // clang-format on
+            //dong
+            nrn_pragma_acc(atomic capture)
+            nrn_pragma_omp(atomic capture)
+            idx = net_send_buf_count++;
+
+            nt->_net_send_buffer[idx] = i;
+        }
+    }
+
+// clang-format off
+    //dong
+    //#pragma acc wait(stream_id)
+    nrn_pragma_acc(wait(nt->stream_id))
+    // clang-format on
+    nt->_net_send_buffer_cnt = net_send_buf_count;
+
+    }
+
+    #pragma acc host_data use_device(nt->_net_send_buffer)
+    {
+        CudaDeliver(nt->_net_send_buffer, nt->_net_send_buffer_cnt, nt);
+    }
+//     if (nt->_net_send_buffer_cnt) {
+// #ifdef _OPENACC
+//         int* nsbuffer = nt->_net_send_buffer;
+// #endif
+// // clang-format off
+//         #pragma acc update host(nsbuffer[0:nt->_net_send_buffer_cnt]) if (nt->compute_gpu) async(stream_id)
+//         #pragma acc wait(stream_id)
+//         // clang-format on
+//     }
+
+    // {
+    // Instrumentor::phase p("send_presyn_host");
+    // // on CPU...
+    // for (i = 0; i < nt->_net_send_buffer_cnt; ++i) {
+    //     PreSyn* ps = nt->presyns + nt->_net_send_buffer[i];
+    //     ps->send(nt->_t + teps, net_cvode_instance, nt);
+    // }
+    // }
+
+    TQItem* q;
+    double tm, tsav;
+
+    int tid = nt->id;
+    tsav = nt->_t;
+    tm = nt->_t + 0.5 * nt->_dt;
+
+    {
+    Instrumentor::phase ph("deque_deliver_host");
+tryagain:
+    // one of the events on the main queue may be a NetParEvent
+    // which due to dt round off error can result in an event
+    // placed on the bin queue to be delivered now, which
+    // can put 0 delay events on to the main queue. So loop til
+    // no events. The alternative would be to deliver an idt=0 event
+    // immediately but that would very much change the sequence
+    // with respect to what is being done here and it is unclear
+    // how to fix the value of t there. This can be a do while loop
+    // but I do not want to affect the case of not using a bin queue.
+
+    if (nrn_use_bin_queue_) {
+        while ((q = p[tid].tqe_->dequeue_bin()) != 0) {
+            DiscreteEvent* db = (DiscreteEvent*)q->data_;
+
+#if PRINT_EVENT
+            if (print_event_) {
+                db->pr("binq deliver", nrn_threads->_t, this);
+            }
+#endif
+
+            delete q;
+            db->deliver(nt->_t, this, nt);
+        }
+        // assert(int(tm/nt->_dt)%1000 == p[tid].tqe_->nshift_);
+    }
+
+    deliver_events(tm, nt);
+
+    if (nrn_use_bin_queue_) {
+        if (p[tid].tqe_->top()) {
+            goto tryagain;
+        }
+        p[tid].tqe_->shift_bin(tm);
+    }
+    }
+
+    nt->_t = tsav;
+
+    {
+    Instrumentor::phase p("transfer_netbuf_host2device");
+    /*before executing on gpu, we have to update the NetReceiveBuffer_t on GPU */
+    update_net_receive_buffer(nt);
+    }
+
+    {
+    Instrumentor::phase p("netbuf_receive_device");
+    for (auto& net_buf_receive : corenrn.get_net_buf_receive()) {
+        (*net_buf_receive.first)(nt);
+    }
+    }
+
+}
+
 }  // namespace coreneuron
