@@ -588,7 +588,9 @@ void setup_ThreadData(NrnThread& nt) {
 void read_phasegap(NrnThread& nt, UserParams& userParams) {
     auto& F = userParams.file_reader[nt.id];
     if (F.fail()) {
-    printf("read_phasegap file error\n");//dong
+    
+    //dong
+    printf("read_phasegap file error\n");
         return;
     }
 
