@@ -23,7 +23,9 @@
 #include "coreneuron/utils/nrnoc_aux.hpp"
 #include "coreneuron/mpi/nrnmpidec.h"
 #include "coreneuron/utils/utils.hpp"
-#include "coreneuron/cudadeliver/log.h"//dong
+
+//dong
+#include "coreneuron/cudadeliver/log.h"
 
 #ifdef CRAYPAT
 #include <pat_api.h>
@@ -612,7 +614,9 @@ void delete_ivoc_vect_from_device(IvocVect& vec) {
 }
 
 void realloc_net_receive_buffer(NrnThread* nt, Memb_list* ml) {
-    Instrumentor::phase p = Instrumentor::phase("realloc_net_receive_buffer");//dong
+    //dong
+    Instrumentor::phase p = Instrumentor::phase("realloc_net_receive_buffer");
+    
     NetReceiveBuffer_t* nrb = ml->_net_receive_buffer;
     if (!nrb) {
         return;
@@ -759,7 +763,9 @@ static void net_receive_buffer_order_refactor(NetReceiveBuffer_t* nrb) {
  * functional version.
  */
 void update_net_receive_buffer(NrnThread* nt) {
-    Instrumentor::phase p_update_net_receive_buffer("update-net-receive-buf");//dong
+    //dong
+    Instrumentor::phase p_update_net_receive_buffer("update-net-receive-buf");
+    
     for (auto tml = nt->tml; tml; tml = tml->next) {
         int is_art = corenrn.get_is_artificial()[tml->index];
         if (is_art) {
@@ -771,10 +777,12 @@ void update_net_receive_buffer(NrnThread* nt) {
         // if net receive buffer exist for mechanism
         if (nrb && nrb->_cnt) {
             // instance order to avoid race. setup _displ and _nrb_index
-            // net_receive_buffer_order(nrb); //dong
+            //dong
+            // net_receive_buffer_order(nrb); 
+            //dong
             {
             	Instrumentor::phase p1 = Instrumentor::phase("net_receive_buffer_order_refactor");//dong
-            	net_receive_buffer_order_refactor(nrb);//dong
+            	net_receive_buffer_order_refactor(nrb);
             }
 
             if (nt->compute_gpu) {
