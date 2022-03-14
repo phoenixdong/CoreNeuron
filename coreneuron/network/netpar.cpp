@@ -27,6 +27,9 @@
 #include "coreneuron/utils/profile/profiler_interface.h"
 #include "coreneuron/utils/utils.hpp"
 
+//dong
+#include "coreneuron/cudadeliver/cudadeliver.h"
+
 #if NRNMPI
 #include "coreneuron/mpi/nrnmpi.h"
 #include "coreneuron/mpi/core/nrnmpi.hpp"
@@ -311,11 +314,20 @@ void nrn_spike_exchange(NrnThread* nt) {
     }
 #if NRN_MULTISEND
     if (use_multisend_) {
+//dong
+#ifdef CUDA_DELIVER
+        CudaDeliverSyncronize(nt);
+        return;
+#endif
         nrn_multisend_receive(nt);
         return;
     }
 #endif
     if (use_compress_) {
+//dong
+#ifdef CUDA_DELIVER
+    assert(false);
+#endif
         nrn_spike_exchange_compressed(nt);
         return;
     }
@@ -346,7 +358,16 @@ void nrn_spike_exchange(NrnThread* nt) {
     if (n == 0) {
         return;
     }
+
+//dong
+{
+    Instrumentor::phase p("nrn_spike_exchange_send");
 #if nrn_spikebuf_size > 0
+//dong
+#ifdef CUDA_DELIVER
+    assert(false);
+#endif
+
     for (int i = 0; i < nrnmpi_numprocs; ++i) {
         int nn = spbufin[i].nspike;
         if (nn > nrn_spikebuf_size) {
@@ -362,6 +383,12 @@ void nrn_spike_exchange(NrnThread* nt) {
     }
     n = ovfl;
 #endif  // nrn_spikebuf_size > 0
+//dong
+#ifdef CUDA_DELIVER
+    CudaDeliverCommitCpuRecvSpikesToFiredTable(spikein_, n, nt);
+    return;
+#endif
+
     for (int i = 0; i < n; ++i) {
         auto gid2in_it = gid2in.find(spikein[i].gid);
         if (gid2in_it != gid2in.end()) {
