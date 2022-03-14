@@ -24,6 +24,7 @@ int hoc_errno_count;
 //const char* bbcore_write_version = "1.5";  // Generalize POINTER transfer to allow pointing to any
                                            // RANGE variable
 
+//dong
 const char* bbcore_write_version = "1.5.mod100";//dong
 
 char* pnt_name(Point_process* pnt) {
