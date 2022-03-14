@@ -125,6 +125,7 @@ static int current_rbuf, next_rbuf;
 //dong
 //static int* targets_phase1_;
 int* targets_phase1_;
+
 static int* targets_phase2_;
 
 void nrn_multisend_send(PreSyn* ps, double t, NrnThread* nt) {
@@ -145,8 +146,10 @@ void nrn_multisend_send(PreSyn* ps, double t, NrnThread* nt) {
         if (nt == nrn_threads) {
             multisend_receive_buffer[next_rbuf]->nsend_ += cnt;
             multisend_receive_buffer[next_rbuf]->nsend_cell_ += 1;
+
             //dong
             TRACE("send spike (%d,%lf)", spk.gid, spk.spiketime);
+
             nrnmpi_multisend(&spk, cnt_phase1, ranks);
         } else {
             assert(0);
@@ -357,6 +360,7 @@ static int multisend_advance() {
 #endif
 //dong
         TRACE("receive spike (%d,%lf)", spk.gid, spk.spiketime);
+        
         multisend_receive_buffer[j]->incoming(spk.gid, spk.spiketime);
     }
     return i;
