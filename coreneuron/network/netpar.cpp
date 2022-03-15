@@ -359,9 +359,6 @@ void nrn_spike_exchange(NrnThread* nt) {
         return;
     }
 
-//dong
-{
-    Instrumentor::phase p("nrn_spike_exchange_send");
 #if nrn_spikebuf_size > 0
 //dong
 #ifdef CUDA_DELIVER

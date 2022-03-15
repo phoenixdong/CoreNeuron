@@ -354,7 +354,7 @@ void nrnmpi_multisend_impl(NRNMPI_Spike* spk, int n, int* hosts) {
 }
 
 //dong
-void nrnmpi_multisend_impl(NRNMPI_Spike* spk, int n, int* hosts, MPI_Comm* pcomm) {
+void nrnmpi_multisend_impl_j(NRNMPI_Spike* spk, int n, int* hosts, MPI_Comm* pcomm) {
     {
     Instrumentor::phase p("nrnmpi_multisend");
     MPI_Request r;
@@ -380,10 +380,10 @@ int nrnmpi_multisend_single_advance_impl(NRNMPI_Spike* spk) {
 }
 
 //dong
-int nrnmpi_multisend_single_advance_impl(NRNMPI_Spike* spk, MPI_Comm* pcomm) {
+int nrnmpi_multisend_single_advance_impl_j(NRNMPI_Spike* spk, MPI_Comm* pcomm) {
     int flag = 0;
     {
-    Instrumentor::phase p("nrnmpi_multisend_advance");
+    Instrumentor::phase p("nrnmpi_multisend_advance_j");
     MPI_Status status;
     MPI_Iprobe(MPI_ANY_SOURCE, 1, *pcomm, &flag, &status);
     if (flag) {
@@ -401,7 +401,7 @@ int nrnmpi_multisend_conserve_impl(int nsend, int nrecv) {
 }
 
 //dong
-int nrnmpi_multisend_conserve_impl(int nsend, int nrecv, MPI_Comm* pcomm) {
+int nrnmpi_multisend_conserve_impl_j(int nsend, int nrecv, MPI_Comm* pcomm) {
     int tcnts[2];
     tcnts[0] = nsend - nrecv;
     MPI_Allreduce(tcnts, tcnts + 1, 1, MPI_INT, MPI_SUM, *pcomm);

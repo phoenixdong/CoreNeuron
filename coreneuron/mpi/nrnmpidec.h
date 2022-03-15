@@ -13,7 +13,13 @@ the prototypes be of the form "type foo(type arg, ...)"
 
 #pragma once
 
+//dong
+// #if NRNMPI
 #include <stdlib.h>
+
+//dong
+// #include <mpi.h>
+#include </usr/lib/x86_64-linux-gnu/openmpi/include/mpi.h>
 
 namespace coreneuron {
 /* from nrnmpi.cpp */
@@ -92,25 +98,26 @@ extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_comm_impl)>
 extern "C" void nrnmpi_multisend_impl(NRNMPI_Spike* spk, int n, int* hosts);
 extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_impl)> nrnmpi_multisend;
 //dong
-extern "C" void nrnmpi_multisend_impl(NRNMPI_Spike* spk, int n, int* hosts, MPI_Comm* pcomm);
-extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_impl)> nrnmpi_multisend;
+extern "C" void nrnmpi_multisend_impl_j(NRNMPI_Spike* spk, int n, int* hosts, MPI_Comm* pcomm);
+extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_impl_j)> nrnmpi_multisend_j;
 
 extern "C" int nrnmpi_multisend_single_advance_impl(NRNMPI_Spike* spk);
 extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_single_advance_impl)>
     nrnmpi_multisend_single_advance;
 //dong
-extern "C" int nrnmpi_multisend_single_advance_impl(NRNMPI_Spike* spk, MPI_Comm* pcomm);
-extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_single_advance_impl)>
-    nrnmpi_multisend_single_advance;
+extern "C" int nrnmpi_multisend_single_advance_impl_j(NRNMPI_Spike* spk, MPI_Comm* pcomm);
+extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_single_advance_impl_j)>
+    nrnmpi_multisend_single_advance_j;
 
 extern "C" int nrnmpi_multisend_conserve_impl(int nsend, int nrecv);
 extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_conserve_impl)>
     nrnmpi_multisend_conserve;
 //dong
-extern "C" int nrnmpi_multisend_conserve_impl(int nsend, int nrecvi, MPI_Comm* pcomm);
-extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_conserve_impl)>
-    nrnmpi_multisend_conserve;
+extern "C" int nrnmpi_multisend_conserve_impl_j(int nsend, int nrecvi, MPI_Comm* pcomm);
+extern mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_conserve_impl_j)>
+    nrnmpi_multisend_conserve_j;
 
 #endif
 
 }  // namespace coreneuron
+// #endif

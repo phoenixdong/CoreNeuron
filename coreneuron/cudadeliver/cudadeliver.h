@@ -2,7 +2,9 @@
 
 #include "coreneuron/sim/multicore.hpp"
 
-#include <mpi.h>
+//dong
+//#include <mpi.h>
+#include </usr/lib/x86_64-linux-gnu/openmpi/include/mpi.h>
 
 namespace coreneuron {
 extern MPI_Comm multisendComm;

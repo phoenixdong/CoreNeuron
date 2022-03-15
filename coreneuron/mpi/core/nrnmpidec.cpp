@@ -56,14 +56,27 @@ mpi_function<cnrn_make_integral_constant_t(nrnmpi_local_rank_impl)> nrnmpi_local
 mpi_function<cnrn_make_integral_constant_t(nrnmpi_local_size_impl)> nrnmpi_local_size{
     "nrnmpi_local_size_impl"};
 #if NRN_MULTISEND
+
 mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_comm_impl)> nrnmpi_multisend_comm{
     "nrnmpi_multisend_comm_impl"};
+
+
 mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_impl)> nrnmpi_multisend{
     "nrnmpi_multisend_impl"};
+mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_impl_j)> nrnmpi_multisend_j{
+    "nrnmpi_multisend_impl_j"};
+
 mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_single_advance_impl)>
     nrnmpi_multisend_single_advance{"nrnmpi_multisend_single_advance_impl"};
+mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_single_advance_impl_j)>
+    nrnmpi_multisend_single_advance_j{"nrnmpi_multisend_single_advance_impl_j"};
+
 mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_conserve_impl)>
     nrnmpi_multisend_conserve{"nrnmpi_multisend_conserve_impl"};
+mpi_function<cnrn_make_integral_constant_t(nrnmpi_multisend_conserve_impl_j)>
+    nrnmpi_multisend_conserve_j{"nrnmpi_multisend_conserve_impl_j"};
+
 #endif  // NRN_MULTISEND
 
 }  // namespace coreneuron
+

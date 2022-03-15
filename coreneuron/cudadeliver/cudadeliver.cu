@@ -121,7 +121,7 @@ void CudaDeliverSyncronize(const NrnThread* ptrNrnThread) {
     nrnmpi_barrier();
     cpuMultiRecv(cRecvSpikeGids, cRecvSpikeTimes, &recvSpikeSize, maxSpikeSize);
     int ncons = 0;
-    while (nrnmpi_multisend_conserve(multiSendCnt, multiRecvCnt, &multisendComm) != 0) {
+    while (nrnmpi_multisend_conserve_j(multiSendCnt, multiRecvCnt, &multisendComm) != 0) {
         cpuMultiRecv(cRecvSpikeGids, cRecvSpikeTimes, &recvSpikeSize, maxSpikeSize);
         ++ncons;
     }
@@ -241,7 +241,7 @@ void cpuMultiSend(const int* cFiredPreSynIds, const int size, const NrnThread* p
         spk.spiketime = ptrNrnThread->_t + teps;
         assert(spk.gid >= 0);
         TRACE("send spike (%d,%lf)", spk.gid, spk.spiketime);
-        nrnmpi_multisend(&spk, cntPhase1, ranks, &multisendComm);
+        nrnmpi_multisend_j(&spk, cntPhase1, ranks, &multisendComm);
         multiSendCnt += cntPhase1;
     }
 }
@@ -252,7 +252,7 @@ void cpuMultiRecv(int* cRecvSpikeGidBuffer, double* cRecvSpikeTimeBuffer, int* p
     const FiredTable& firedTable = *ptrFiredTable;
     NRNMPI_Spike spk;
     assert(!firedTable.locked);
-    while(nrnmpi_multisend_single_advance(&spk, &multisendComm)) {
+    while(nrnmpi_multisend_single_advance_j(&spk, &multisendComm)) {
         TRACE("receive spike (%d,%lf)", spk.gid, spk.spiketime);
         ++multiRecvCnt;
         const int stepDiff = (spk.spiketime - firedTable.currTime) / firedTable.dt;
